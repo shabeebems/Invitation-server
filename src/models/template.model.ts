@@ -300,7 +300,7 @@ const galleryItemSchema = new Schema<IGalleryItem>(
   { _id: false }
 );
 
-const templateContentSchema = new Schema<ITemplateContent>(
+export const templateContentSchema = new Schema<ITemplateContent>(
   {
     ...contentFields,
     programItems: { type: [programItemSchema] },
@@ -309,7 +309,7 @@ const templateContentSchema = new Schema<ITemplateContent>(
   { _id: false }
 );
 
-const templateImageSchema = new Schema<ITemplateImage>(
+export const templateImageSchema = new Schema<ITemplateImage>(
   {
     slot: { type: String, required: true, trim: true },
     url: { type: String, default: "" },

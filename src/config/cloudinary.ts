@@ -12,6 +12,7 @@ cloudinary.config({
 
 export const CATEGORY_IMAGE_FOLDER = "invitation/categories";
 export const TEMPLATE_IMAGE_FOLDER = "invitation/templates";
+export const WORK_IMAGE_FOLDER = "invitation/works";
 
 export type UploadedImage = {
   url: string;
@@ -64,6 +65,23 @@ export async function uploadCategoryImage(file: Express.Multer.File): Promise<Up
 
 export async function uploadTemplateImage(file: Express.Multer.File): Promise<UploadedImage> {
   return uploadImageBuffer(file, TEMPLATE_IMAGE_FOLDER);
+}
+
+export async function uploadWorkImage(file: Express.Multer.File): Promise<UploadedImage> {
+  return uploadImageBuffer(file, WORK_IMAGE_FOLDER);
+}
+
+export async function uploadImageFromUrl(url: string, folder: string): Promise<UploadedImage> {
+  const result = await cloudinary.uploader.upload(url, {
+    folder,
+    resource_type: "image",
+  });
+
+  return fromResult(result);
+}
+
+export function isWorkCloudinaryId(publicId?: string) {
+  return Boolean(publicId && publicId.startsWith(`${WORK_IMAGE_FOLDER}/`));
 }
 
 export async function deleteCloudinaryImage(publicId?: string): Promise<void> {

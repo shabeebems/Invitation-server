@@ -5,10 +5,11 @@ import {
   ITemplate,
 } from "../models/template.model";
 import { ITheme } from "../models/theme.model";
+import { IWork } from "../models/work.model";
 import { toThemeJson } from "./theme.mapper";
 
-function categoryFrom(template: ITemplate) {
-  const category = template.categoryId as unknown;
+function categoryFrom(work: IWork) {
+  const category = work.categoryId as unknown;
 
   if (category && typeof category === "object" && "name" in category) {
     const populated = category as ICategory;
@@ -19,13 +20,32 @@ function categoryFrom(template: ITemplate) {
   }
 
   return {
-    categoryId: String(template.categoryId || ""),
+    categoryId: String(work.categoryId || ""),
     categoryName: "",
   };
 }
 
-function selectedThemeFrom(template: ITemplate) {
-  const theme = template.selectedThemeId as unknown;
+function templateFrom(work: IWork) {
+  const template = work.templateId as unknown;
+
+  if (template && typeof template === "object" && "name" in template) {
+    const populated = template as ITemplate;
+    return {
+      templateId: String(populated._id),
+      templateName: populated.name,
+      templateSlug: populated.slug,
+    };
+  }
+
+  return {
+    templateId: String(work.templateId || ""),
+    templateName: "",
+    templateSlug: "",
+  };
+}
+
+function selectedThemeFrom(work: IWork) {
+  const theme = work.selectedThemeId as unknown;
 
   if (theme && typeof theme === "object" && "title" in theme) {
     const populated = theme as ITheme;
@@ -36,25 +56,26 @@ function selectedThemeFrom(template: ITemplate) {
   }
 
   return {
-    selectedThemeId: String(template.selectedThemeId || ""),
+    selectedThemeId: String(work.selectedThemeId || ""),
     selectedThemeTitle: "",
   };
 }
 
-export function toTemplateJson(template: ITemplate, themes: ITheme[] = []) {
-  const category = categoryFrom(template);
-  const selectedTheme = selectedThemeFrom(template);
-  const raw = JSON.parse(JSON.stringify(template.content || {})) as ITemplate["content"];
+export function toWorkJson(work: IWork, themes: ITheme[] = []) {
+  const category = categoryFrom(work);
+  const template = templateFrom(work);
+  const selectedTheme = selectedThemeFrom(work);
+  const raw = JSON.parse(JSON.stringify(work.content || {})) as IWork["content"];
   const compacted = compactTemplateContent(raw, contentFamilyFromCategory(category.categoryName));
 
   return {
-    id: String(template._id),
-    slug: template.slug,
-    name: template.name,
-    description: template.description,
-    isActive: template.isActive,
-    source: "template" as const,
-    images: (template.images || []).map((image) => ({
+    id: String(work._id),
+    slug: work.slug,
+    name: work.name,
+    description: work.description,
+    isActive: work.isActive,
+    source: "work" as const,
+    images: (work.images || []).map((image) => ({
       slot: image.slot,
       url: image.url || "",
     })),
@@ -81,10 +102,11 @@ export function toTemplateJson(template: ITemplate, themes: ITheme[] = []) {
           }
         : {}),
     },
-    createdAt: template.createdAt,
-    updatedAt: template.updatedAt,
+    createdAt: work.createdAt,
+    updatedAt: work.updatedAt,
     themes: themes.map(toThemeJson),
     ...category,
+    ...template,
     ...selectedTheme,
   };
 }
