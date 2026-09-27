@@ -2,9 +2,9 @@ import path from "path";
 import mongoose from "mongoose";
 import { connectDB } from "../config/db";
 import { TEMPLATE_IMAGE_FOLDER, uploadImageFile } from "../config/cloudinary";
-import { CategoryRepository } from "../repositories/category.repository";
-import { TemplateRepository } from "../repositories/template.repository";
-import { ThemeRepository } from "../repositories/theme.repository";
+import CategoryRepository from "../repositories/implementations/category-repository";
+import TemplateRepository from "../repositories/implementations/template-repository";
+import ThemeRepository from "../repositories/implementations/theme-repository";
 
 const categoryRepository = new CategoryRepository();
 const templateRepository = new TemplateRepository();
