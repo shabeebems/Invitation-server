@@ -1,15 +1,31 @@
 import { Router } from "express";
-import { TemplateController } from "../controllers/template.controller";
-import { uploadImageMiddleware } from "../middleware/upload";
+import container from "../config/inversify.config";
+import TYPES from "../constants/types";
+import ITemplateController from "../controllers/interfaces/template-controller.interface";
+import asyncHandler from "../middlewares/async.middleware";
+import requireAdmin from "../middlewares/require-admin.middleware";
+import { uploadImageMiddleware } from "../middlewares/upload.middleware";
 
-const templateController = new TemplateController();
+const templateController = container.get<ITemplateController>(TYPES.ITemplateController);
 const templateRouter = Router();
 
-templateRouter.get("/", (req, res) => templateController.list(req, res));
-templateRouter.get("/:slug", (req, res) => templateController.show(req, res));
-templateRouter.put("/:slug/theme", (req, res) => templateController.selectTheme(req, res));
-templateRouter.put("/:slug", uploadImageMiddleware, (req, res) =>
-  templateController.update(req, res)
+templateRouter.get(
+  "/",
+  asyncHandler((req, res) => templateController.list(req, res))
+);
+templateRouter.get(
+  "/:slug",
+  asyncHandler((req, res) => templateController.show(req, res))
+);
+templateRouter.put(
+  "/:slug/theme",
+  asyncHandler((req, res) => templateController.selectTheme(req, res))
+);
+templateRouter.put(
+  "/:slug",
+  requireAdmin,
+  uploadImageMiddleware,
+  asyncHandler((req, res) => templateController.update(req, res))
 );
 
 export default templateRouter;
