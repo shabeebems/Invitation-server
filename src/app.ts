@@ -5,11 +5,12 @@ import routes from "./routes";
 import errorHandler from "./middlewares/error.middleware";
 
 const app = express();
-const clientOrigin = process.env.CLIENT_ORIGIN || "http://localhost:3000";
+const clientOrigin = process.env.CLIENT_ORIGIN;
 
 app.use(
   helmet({
     contentSecurityPolicy: false,
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
     crossOriginResourcePolicy: { policy: "cross-origin" },
   })
 );

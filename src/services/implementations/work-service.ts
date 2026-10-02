@@ -1,7 +1,7 @@
 import { Request } from "express";
 import { inject, injectable } from "inversify";
 import { Types } from "mongoose";
-import { BadRequestError, NotFoundError } from "../../common/errors";
+import { BadRequestError, ForbiddenError, NotFoundError } from "../../common/errors";
 import { groupThemes } from "../../common/helpers/group-themes";
 import { guard } from "../../common/helpers/guard";
 import {
@@ -31,7 +31,7 @@ import type ICategoryRepository from "../../repositories/interfaces/category-rep
 import type ITemplateRepository from "../../repositories/interfaces/template-repository.interface";
 import type IThemeRepository from "../../repositories/interfaces/theme-repository.interface";
 import type IWorkRepository from "../../repositories/interfaces/work-repository.interface";
-import IWorkService from "../interfaces/work-service.interface";
+import IWorkService, { WorkActor } from "../interfaces/work-service.interface";
 
 const RESERVED_SLUGS = new Set([
   "dashboard",
@@ -41,6 +41,13 @@ const RESERVED_SLUGS = new Set([
   "users",
   "preview",
   "api",
+  "account",
+  "use",
+  "login",
+  "signup",
+  "profile",
+  "admin",
+  "published",
 ]);
 
 @injectable()
@@ -52,9 +59,14 @@ export default class WorkService implements IWorkService {
     @inject(TYPES.IThemeRepository) private readonly themeRepository: IThemeRepository
   ) {}
 
-  async list() {
+  async list(actor: WorkActor) {
     return guard("Could not load works", async () => {
-      return this.withThemes(await this.workRepository.findAll());
+      const works =
+        actor.role === "admin"
+          ? await this.workRepository.findAll()
+          : await this.workRepository.findByUserId(actor.userId);
+
+      return this.withThemes(works);
     });
   }
 
@@ -77,7 +89,7 @@ export default class WorkService implements IWorkService {
     });
   }
 
-  async create(body: unknown) {
+  async create(body: unknown, userId: string) {
     return guard("Could not create work", async () => {
       const fields = requestBody(body);
       const categoryId = String(fields.categoryId || "").trim();
@@ -110,17 +122,24 @@ export default class WorkService implements IWorkService {
 
       const snapshot = await this.snapshotFromTemplate(template);
       const family = contentFamilyFromCategory(category.name);
+      const details = parseTemplateContent(fields.details ?? fields.content);
       const slug = await this.uniqueWorkSlug(name);
+      const selectedThemeId = await this.themeForTemplate(
+        templateId,
+        String(fields.selectedThemeId || "").trim() ||
+          (template.selectedThemeId ? this.idOf(template.selectedThemeId) : "")
+      );
 
       const work = await this.workRepository.create({
         slug,
         name,
         description: template.description,
+        userId,
         categoryId,
         templateId,
-        selectedThemeId: template.selectedThemeId ? this.idOf(template.selectedThemeId) : null,
+        selectedThemeId,
         images: snapshot.images,
-        content: compactTemplateContent(snapshot.content, family) as ITemplateContent,
+        content: compactTemplateContent({ ...snapshot.content, ...details }, family) as ITemplateContent,
       });
 
       const [json] = await this.withThemes([work]);
@@ -128,7 +147,7 @@ export default class WorkService implements IWorkService {
     });
   }
 
-  async update(slug: string, body: unknown, file?: Request["file"]) {
+  async update(slug: string, body: unknown, actor: WorkActor, file?: Request["file"]) {
     return guard("Could not update work", async () => {
       const normalized = slug.trim();
 
@@ -141,6 +160,8 @@ export default class WorkService implements IWorkService {
       if (!existing) {
         throw new NotFoundError("Work not found");
       }
+
+      this.assertCanMutate(existing, actor);
 
       const fields = requestBody(body);
       const patch = parseTemplateContent(fields.content);
@@ -211,7 +232,7 @@ export default class WorkService implements IWorkService {
     });
   }
 
-  async selectTheme(slug: string, body: unknown) {
+  async selectTheme(slug: string, body: unknown, actor: WorkActor) {
     return guard("Could not change theme", async () => {
       const normalized = slug.trim();
       const selectedThemeId = String(requestBody(body).selectedThemeId || "").trim();
@@ -230,6 +251,8 @@ export default class WorkService implements IWorkService {
         throw new NotFoundError("Work not found");
       }
 
+      this.assertCanMutate(work, actor);
+
       const theme = await this.themeRepository.findById(selectedThemeId);
 
       if (!theme || String(theme.templateId) !== this.idOf(work.templateId)) {
@@ -240,6 +263,34 @@ export default class WorkService implements IWorkService {
       const [json] = updated ? await this.withThemes([updated]) : [];
       return json;
     });
+  }
+
+  private async themeForTemplate(templateId: string, selectedThemeId: string) {
+    if (!selectedThemeId) {
+      return null;
+    }
+
+    if (!Types.ObjectId.isValid(selectedThemeId)) {
+      throw new BadRequestError("A valid theme is required");
+    }
+
+    const theme = await this.themeRepository.findById(selectedThemeId);
+
+    if (!theme || this.idOf(theme.templateId) !== templateId) {
+      throw new BadRequestError("Theme does not belong to this template");
+    }
+
+    return selectedThemeId;
+  }
+
+  private assertCanMutate(work: IWork, actor: WorkActor) {
+    if (actor.role === "admin") {
+      return;
+    }
+
+    if (this.idOf(work.userId) !== actor.userId) {
+      throw new ForbiddenError("You can only edit your own invitations");
+    }
   }
 
   private async withThemes(works: IWork[]) {

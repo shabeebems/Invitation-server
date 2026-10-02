@@ -13,6 +13,7 @@ export default interface ICategoryRepository {
   findByName(name: string): Promise<ICategory | null>;
   findWedding(): Promise<ICategory | null>;
   findHouseWarming(): Promise<ICategory | null>;
+  findBirthday(): Promise<ICategory | null>;
   findById(id: string): Promise<ICategory | null>;
   create(data: CategoryInput): Promise<ICategory>;
   update(id: string, data: CategoryInput): Promise<ICategory | null>;

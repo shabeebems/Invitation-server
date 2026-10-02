@@ -20,6 +20,12 @@ export default class WorkRepository implements IWorkRepository {
       .sort({ createdAt: -1 });
   }
 
+  async findByUserId(userId: string): Promise<IWork[]> {
+    return WorkModel.find({ userId })
+      .populate([...populatePaths])
+      .sort({ createdAt: -1 });
+  }
+
   async findBySlug(slug: string): Promise<IWork | null> {
     return WorkModel.findOne({ slug: slug.toLowerCase() }).populate([...populatePaths]);
   }
@@ -34,6 +40,7 @@ export default class WorkRepository implements IWorkRepository {
       slug: data.slug,
       name: data.name,
       description: data.description || "",
+      userId: data.userId || null,
       categoryId: data.categoryId,
       templateId: data.templateId,
       selectedThemeId: data.selectedThemeId || null,

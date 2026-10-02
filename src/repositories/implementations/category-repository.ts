@@ -25,6 +25,10 @@ export default class CategoryRepository implements ICategoryRepository {
     return CategoryModel.findOne({ name: /house\s*warm/i }).sort({ createdAt: 1 });
   }
 
+  async findBirthday(): Promise<ICategory | null> {
+    return CategoryModel.findOne({ name: /birthday/i }).sort({ createdAt: 1 });
+  }
+
   async findById(id: string): Promise<ICategory | null> {
     return CategoryModel.findById(id);
   }

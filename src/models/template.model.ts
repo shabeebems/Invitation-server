@@ -87,10 +87,15 @@ export interface ITemplateContent {
   calendarModalDesc: string;
   googleCalendarLabel: string;
   icsCalendarLabel: string;
+  celebrantName: string;
+  ageLabel: string;
+  partyTitle: string;
+  dressCode: string;
+  rsvpNote: string;
 }
 
 export type TemplateContentTextKey = Exclude<keyof ITemplateContent, "programItems" | "galleryItems">;
-export type TemplateContentFamily = "wedding" | "housewarming" | "shared";
+export type TemplateContentFamily = "wedding" | "housewarming" | "birthday" | "shared";
 
 export const SHARED_CONTENT_KEYS: TemplateContentTextKey[] = [
   "bismillah",
@@ -170,15 +175,47 @@ export const HOUSEWARMING_ONLY_CONTENT_KEYS: TemplateContentTextKey[] = [
   "icsCalendarLabel",
 ];
 
+export const BIRTHDAY_ONLY_CONTENT_KEYS: TemplateContentTextKey[] = [
+  "celebrantName",
+  "ageLabel",
+  "partyTitle",
+  "dressCode",
+  "rsvpNote",
+];
+
+export const BIRTHDAY_SHARED_FROM_WEDDING: TemplateContentTextKey[] = [
+  "hostLabel",
+  "introLine",
+  "presenceLine",
+  "venueLabel",
+  "venueHall",
+  "mapsUrl",
+  "hashtag",
+  "inviteLine",
+  "footer",
+];
+
+export const BIRTHDAY_SHARED_FROM_HOUSE: TemplateContentTextKey[] = [
+  "eventDateIso",
+  "eventEndIso",
+  "addressFull",
+  "googleMapsUrl",
+];
+
 export const TEMPLATE_CONTENT_KEYS: TemplateContentTextKey[] = [
   ...SHARED_CONTENT_KEYS,
   ...WEDDING_ONLY_CONTENT_KEYS,
   ...HOUSEWARMING_ONLY_CONTENT_KEYS,
+  ...BIRTHDAY_ONLY_CONTENT_KEYS,
 ];
 
 export function contentFamilyFromCategory(name: string): TemplateContentFamily {
   if (/house\s*warm/i.test(name)) {
     return "housewarming";
+  }
+
+  if (/birthday/i.test(name)) {
+    return "birthday";
   }
 
   if (/wedding/i.test(name)) {
@@ -195,10 +232,15 @@ export function compactTemplateContent(
   const source = content || {};
   const omit = new Set<string>(
     family === "housewarming"
-      ? WEDDING_ONLY_CONTENT_KEYS
+      ? [...WEDDING_ONLY_CONTENT_KEYS, ...BIRTHDAY_ONLY_CONTENT_KEYS]
       : family === "wedding"
-        ? HOUSEWARMING_ONLY_CONTENT_KEYS
-        : []
+        ? [...HOUSEWARMING_ONLY_CONTENT_KEYS, ...BIRTHDAY_ONLY_CONTENT_KEYS]
+        : family === "birthday"
+          ? [
+              ...WEDDING_ONLY_CONTENT_KEYS.filter((key) => !BIRTHDAY_SHARED_FROM_WEDDING.includes(key)),
+              ...HOUSEWARMING_ONLY_CONTENT_KEYS.filter((key) => !BIRTHDAY_SHARED_FROM_HOUSE.includes(key)),
+            ]
+          : []
   );
   const next: Partial<ITemplateContent> = {};
 
@@ -213,7 +255,7 @@ export function compactTemplateContent(
     }
   }
 
-  if (family !== "wedding") {
+  if (family !== "wedding" && family !== "birthday") {
     if (Array.isArray(source.programItems)) {
       next.programItems = source.programItems;
     }

@@ -3,7 +3,7 @@ import container from "../config/inversify.config";
 import TYPES from "../constants/types";
 import IWorkController from "../controllers/interfaces/work-controller.interface";
 import asyncHandler from "../middlewares/async.middleware";
-import requireAdmin from "../middlewares/require-admin.middleware";
+import requireUser from "../middlewares/require-user.middleware";
 import { uploadImageMiddleware } from "../middlewares/upload.middleware";
 
 const workController = container.get<IWorkController>(TYPES.IWorkController);
@@ -11,12 +11,12 @@ const workRouter = Router();
 
 workRouter.get(
   "/",
-  requireAdmin,
+  requireUser,
   asyncHandler((req, res) => workController.list(req, res))
 );
 workRouter.post(
   "/",
-  requireAdmin,
+  requireUser,
   asyncHandler((req, res) => workController.create(req, res))
 );
 workRouter.get(
@@ -25,11 +25,12 @@ workRouter.get(
 );
 workRouter.put(
   "/:slug/theme",
+  requireUser,
   asyncHandler((req, res) => workController.selectTheme(req, res))
 );
 workRouter.put(
   "/:slug",
-  requireAdmin,
+  requireUser,
   uploadImageMiddleware,
   asyncHandler((req, res) => workController.update(req, res))
 );

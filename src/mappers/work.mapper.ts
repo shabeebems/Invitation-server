@@ -75,6 +75,10 @@ export function toWorkJson(work: IWork, themes: ITheme[] = []) {
     description: work.description,
     isActive: work.isActive,
     source: "work" as const,
+    userId:
+      work.userId && typeof work.userId === "object" && "_id" in work.userId
+        ? String((work.userId as { _id: unknown })._id)
+        : String(work.userId || ""),
     images: (work.images || []).map((image) => ({
       slot: image.slot,
       url: image.url || "",

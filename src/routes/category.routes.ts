@@ -9,14 +9,14 @@ import { uploadCategoryImageMiddleware } from "../middlewares/upload.middleware"
 const categoryController = container.get<ICategoryController>(TYPES.ICategoryController);
 const categoryRouter = Router();
 
-categoryRouter.use(requireAdmin);
 categoryRouter.get(
   "/",
   asyncHandler((req, res) => categoryController.list(req, res))
 );
-categoryRouter.post("/", uploadCategoryImageMiddleware, asyncHandler((req, res) => categoryController.create(req, res)));
+categoryRouter.post("/", requireAdmin, uploadCategoryImageMiddleware, asyncHandler((req, res) => categoryController.create(req, res)));
 categoryRouter.put(
   "/:id",
+  requireAdmin,
   uploadCategoryImageMiddleware,
   asyncHandler((req, res) => categoryController.update(req, res))
 );

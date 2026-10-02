@@ -12,6 +12,7 @@ export interface IWork extends Document {
   slug: string;
   name: string;
   description: string;
+  userId?: Types.ObjectId;
   categoryId: Types.ObjectId;
   templateId: Types.ObjectId;
   selectedThemeId?: Types.ObjectId;
@@ -40,6 +41,12 @@ const workSchema = new Schema<IWork>(
       type: String,
       default: "",
       trim: true,
+    },
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+      index: true,
     },
     categoryId: {
       type: Schema.Types.ObjectId,

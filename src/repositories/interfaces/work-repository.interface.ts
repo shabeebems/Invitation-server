@@ -6,6 +6,7 @@ export type WorkInput = {
   slug: string;
   name: string;
   description?: string;
+  userId?: string | Types.ObjectId | null;
   categoryId: string | Types.ObjectId;
   templateId: string | Types.ObjectId;
   selectedThemeId?: string | Types.ObjectId | null;
@@ -23,6 +24,7 @@ export type WorkUpdate = {
 
 export default interface IWorkRepository {
   findAll(): Promise<IWork[]>;
+  findByUserId(userId: string): Promise<IWork[]>;
   findBySlug(slug: string): Promise<IWork | null>;
   slugExists(slug: string): Promise<boolean>;
   create(data: WorkInput): Promise<IWork>;
