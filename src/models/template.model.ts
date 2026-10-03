@@ -97,6 +97,10 @@ export interface ITemplateContent {
   receptionTitle: string;
   ceremonyTitle: string;
   musicTitle: string;
+  videoUrl: string;
+  videoPosterUrl: string;
+  coverTagline: string;
+  coverTitle: string;
 }
 
 export type TemplateContentTextKey = Exclude<keyof ITemplateContent, "programItems" | "galleryItems">;
@@ -135,6 +139,10 @@ export const WEDDING_ONLY_CONTENT_KEYS: TemplateContentTextKey[] = [
   "receptionTitle",
   "ceremonyTitle",
   "musicTitle",
+  "videoUrl",
+  "videoPosterUrl",
+  "coverTagline",
+  "coverTitle",
 ];
 
 export const HOUSEWARMING_ONLY_CONTENT_KEYS: TemplateContentTextKey[] = [
