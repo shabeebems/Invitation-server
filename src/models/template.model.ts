@@ -92,6 +92,11 @@ export interface ITemplateContent {
   partyTitle: string;
   dressCode: string;
   rsvpNote: string;
+  storyTitle: string;
+  storyText: string;
+  receptionTitle: string;
+  ceremonyTitle: string;
+  musicTitle: string;
 }
 
 export type TemplateContentTextKey = Exclude<keyof ITemplateContent, "programItems" | "galleryItems">;
@@ -125,6 +130,11 @@ export const WEDDING_ONLY_CONTENT_KEYS: TemplateContentTextKey[] = [
   "hashtag",
   "inviteLine",
   "footer",
+  "storyTitle",
+  "storyText",
+  "receptionTitle",
+  "ceremonyTitle",
+  "musicTitle",
 ];
 
 export const HOUSEWARMING_ONLY_CONTENT_KEYS: TemplateContentTextKey[] = [
@@ -202,6 +212,53 @@ export const BIRTHDAY_SHARED_FROM_HOUSE: TemplateContentTextKey[] = [
   "googleMapsUrl",
 ];
 
+export const WEDDING_SHARED_FROM_HOUSE: TemplateContentTextKey[] = [
+  "envelopeTagline",
+  "skipLabel",
+  "openHint",
+  "eventDateIso",
+  "eventEndIso",
+  "countdownHeading",
+  "countdownLiveLabel",
+  "programEyebrow",
+  "programTitle",
+  "programIntro",
+  "galleryEyebrow",
+  "galleryTitle",
+  "galleryIntro",
+  "viewPhotoLabel",
+  "locationEyebrow",
+  "locationTitle",
+  "locationIntro",
+  "destinationLabel",
+  "addressFull",
+  "addressShort",
+  "googleMapsUrl",
+  "appleMapsUrl",
+  "copyAddressLabel",
+  "openGoogleLabel",
+  "openAppleLabel",
+  "addToCalendarLabel",
+  "getDirectionsLabel",
+  "calendarModalTitle",
+  "calendarModalDesc",
+  "googleCalendarLabel",
+  "icsCalendarLabel",
+  "closingBlessing",
+  "closingPresence",
+  "replayLabel",
+  "craftedBy",
+  "navCelebration",
+  "navProgram",
+  "navTour",
+  "navLocation",
+];
+
+export const WEDDING_SHARED_FROM_BIRTHDAY: TemplateContentTextKey[] = [
+  "dressCode",
+  "rsvpNote",
+];
+
 export const TEMPLATE_CONTENT_KEYS: TemplateContentTextKey[] = [
   ...SHARED_CONTENT_KEYS,
   ...WEDDING_ONLY_CONTENT_KEYS,
@@ -234,7 +291,10 @@ export function compactTemplateContent(
     family === "housewarming"
       ? [...WEDDING_ONLY_CONTENT_KEYS, ...BIRTHDAY_ONLY_CONTENT_KEYS]
       : family === "wedding"
-        ? [...HOUSEWARMING_ONLY_CONTENT_KEYS, ...BIRTHDAY_ONLY_CONTENT_KEYS]
+        ? [
+            ...HOUSEWARMING_ONLY_CONTENT_KEYS.filter((key) => !WEDDING_SHARED_FROM_HOUSE.includes(key)),
+            ...BIRTHDAY_ONLY_CONTENT_KEYS.filter((key) => !WEDDING_SHARED_FROM_BIRTHDAY.includes(key)),
+          ]
         : family === "birthday"
           ? [
               ...WEDDING_ONLY_CONTENT_KEYS.filter((key) => !BIRTHDAY_SHARED_FROM_WEDDING.includes(key)),
@@ -255,14 +315,12 @@ export function compactTemplateContent(
     }
   }
 
-  if (family !== "wedding" && family !== "birthday") {
-    if (Array.isArray(source.programItems)) {
-      next.programItems = source.programItems;
-    }
+  if (Array.isArray(source.programItems)) {
+    next.programItems = source.programItems;
+  }
 
-    if (Array.isArray(source.galleryItems)) {
-      next.galleryItems = source.galleryItems;
-    }
+  if (Array.isArray(source.galleryItems)) {
+    next.galleryItems = source.galleryItems;
   }
 
   return next;
