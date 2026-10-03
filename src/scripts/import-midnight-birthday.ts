@@ -49,7 +49,6 @@ async function importMidnightBirthday(): Promise<void> {
       hostLabel: "Hosted with love by",
       hostNames: "Rahul & Meera",
       introLine: "Join us for an evening of laughter, cake, and celebration",
-      presenceLine: "Your presence will make this birthday unforgettable",
       weekday: "Saturday",
       day: "18",
       monthYear: "April 2026",
