@@ -13,6 +13,7 @@ cloudinary.config({
 export const CATEGORY_IMAGE_FOLDER = "invitation/categories";
 export const TEMPLATE_IMAGE_FOLDER = "invitation/templates";
 export const WORK_IMAGE_FOLDER = "invitation/works";
+export const SITE_ASSET_FOLDER = "invitation/site";
 
 export type UploadedImage = {
   url: string;
@@ -59,6 +60,16 @@ export async function uploadImageFile(filePath: string, folder: string): Promise
   return fromResult(result);
 }
 
+/** Upload image, video, or audio; Cloudinary picks the resource type. */
+export async function uploadAssetFile(filePath: string, folder: string): Promise<UploadedImage> {
+  const result = await cloudinary.uploader.upload(filePath, {
+    folder,
+    resource_type: "auto",
+  });
+
+  return fromResult(result);
+}
+
 export async function uploadCategoryImage(file: Express.Multer.File): Promise<UploadedImage> {
   return uploadImageBuffer(file, CATEGORY_IMAGE_FOLDER);
 }
@@ -80,14 +91,31 @@ export async function uploadImageFromUrl(url: string, folder: string): Promise<U
   return fromResult(result);
 }
 
+export function isManagedCloudinaryId(publicId?: string) {
+  if (!publicId) {
+    return false;
+  }
+
+  return (
+    publicId.startsWith(`${CATEGORY_IMAGE_FOLDER}/`) ||
+    publicId.startsWith(`${TEMPLATE_IMAGE_FOLDER}/`) ||
+    publicId.startsWith(`${WORK_IMAGE_FOLDER}/`) ||
+    publicId.startsWith(`${SITE_ASSET_FOLDER}/`)
+  );
+}
+
 export function isWorkCloudinaryId(publicId?: string) {
   return Boolean(publicId && publicId.startsWith(`${WORK_IMAGE_FOLDER}/`));
 }
 
 export async function deleteCloudinaryImage(publicId?: string): Promise<void> {
-  if (!publicId) {
+  if (!isManagedCloudinaryId(publicId)) {
     return;
   }
 
-  await cloudinary.uploader.destroy(publicId);
+  const imageResult = await cloudinary.uploader.destroy(publicId!, { resource_type: "image" });
+
+  if (imageResult.result === "not found") {
+    await cloudinary.uploader.destroy(publicId!, { resource_type: "video" });
+  }
 }

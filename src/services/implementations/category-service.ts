@@ -84,7 +84,9 @@ export default class CategoryService implements ICategoryService {
         const uploaded = await uploadCategoryImage(input.file);
         payload.imageUrl = uploaded.url;
         payload.imagePublicId = uploaded.publicId;
-        await deleteCloudinaryImage(existing.imagePublicId);
+        if (existing.imagePublicId && existing.imagePublicId !== uploaded.publicId) {
+          await deleteCloudinaryImage(existing.imagePublicId);
+        }
       }
 
       const category = await this.categoryRepository.update(id, payload);

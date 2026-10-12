@@ -31,5 +31,3 @@ export function uploadImageMiddleware(
     next();
   });
 }
-
-export const uploadCategoryImageMiddleware = uploadImageMiddleware;

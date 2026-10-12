@@ -2,6 +2,7 @@ import { Request } from "express";
 import { inject, injectable } from "inversify";
 import { Types } from "mongoose";
 import { BadRequestError, ForbiddenError, NotFoundError } from "../../common/errors";
+import { assertAndClampContent } from "../../common/helpers/assert-content-limits";
 import { groupThemes } from "../../common/helpers/group-themes";
 import { guard } from "../../common/helpers/guard";
 import {
@@ -34,20 +35,25 @@ import type IWorkRepository from "../../repositories/interfaces/work-repository.
 import IWorkService, { WorkActor } from "../interfaces/work-service.interface";
 
 const RESERVED_SLUGS = new Set([
-  "dashboard",
-  "categories",
-  "templates",
-  "works",
-  "users",
-  "preview",
-  "api",
-  "account",
-  "use",
-  "login",
-  "signup",
-  "profile",
   "admin",
+  "account",
+  "api",
+  "categories",
+  "dashboard",
+  "forgot-password",
+  "login",
+  "preview",
+  "profile",
   "published",
+  "reset-password",
+  "signup",
+  "templates",
+  "use",
+  "user",
+  "users",
+  "invitations",
+  "verify-email",
+  "works",
 ]);
 
 @injectable()
@@ -122,7 +128,7 @@ export default class WorkService implements IWorkService {
 
       const snapshot = await this.snapshotFromTemplate(template);
       const family = contentFamilyFromCategory(category.name);
-      const details = parseTemplateContent(fields.details ?? fields.content);
+      const details = assertAndClampContent(parseTemplateContent(fields.details ?? fields.content));
       const slug = await this.uniqueWorkSlug(name);
       const selectedThemeId = await this.themeForTemplate(
         templateId,
@@ -164,7 +170,7 @@ export default class WorkService implements IWorkService {
       this.assertCanMutate(existing, actor);
 
       const fields = requestBody(body);
-      const patch = parseTemplateContent(fields.content);
+      const patch = assertAndClampContent(parseTemplateContent(fields.content));
       const currentContent = JSON.parse(JSON.stringify(existing.content || {})) as ITemplateContent;
       const content: ITemplateContent = { ...currentContent, ...patch };
 
@@ -184,6 +190,35 @@ export default class WorkService implements IWorkService {
             await this.deleteWorkAsset(item.publicId);
           }
         }
+      }
+
+      if (patch.loveStoryItems) {
+        const previousItems = currentContent.loveStoryItems || [];
+        content.loveStoryItems = patch.loveStoryItems.map((item, index) => ({
+          icon: item.icon || "",
+          date: item.date || "",
+          place: item.place || "",
+          title: item.title || "",
+          url: item.url || previousItems[index]?.url || "",
+          publicId: item.publicId || previousItems[index]?.publicId || "",
+        }));
+
+        const nextIds = new Set(content.loveStoryItems.map((item) => item.publicId).filter(Boolean));
+        for (const item of previousItems) {
+          if (item.publicId && !nextIds.has(item.publicId)) {
+            await this.deleteWorkAsset(item.publicId);
+          }
+        }
+      }
+
+      if (patch.locationItems) {
+        content.locationItems = patch.locationItems.map((item) => ({
+          label: item.label || "",
+          title: item.title || "",
+          address: item.address || "",
+          mapsUrl: item.mapsUrl || "",
+          appleMapsUrl: item.appleMapsUrl || "",
+        }));
       }
 
       const payload: {
@@ -207,7 +242,25 @@ export default class WorkService implements IWorkService {
               publicId: uploaded.publicId,
             };
             payload.content = { ...content, galleryItems: items };
-            await this.deleteWorkAsset(previous?.publicId);
+            if (previous?.publicId && previous.publicId !== uploaded.publicId) {
+              await this.deleteWorkAsset(previous.publicId);
+            }
+          }
+        } else if (slot === "loveStory") {
+          const index = Number(fields.loveStoryIndex);
+          const items = [...(content.loveStoryItems || [])];
+
+          if (Number.isInteger(index) && index >= 0 && index < items.length) {
+            const previous = items[index];
+            items[index] = {
+              ...items[index],
+              url: uploaded.url,
+              publicId: uploaded.publicId,
+            };
+            payload.content = { ...content, loveStoryItems: items };
+            if (previous?.publicId && previous.publicId !== uploaded.publicId) {
+              await this.deleteWorkAsset(previous.publicId);
+            }
           }
         } else {
           const current = (existing.images || []).map((image) => ({
@@ -217,7 +270,9 @@ export default class WorkService implements IWorkService {
           }));
           const previous = findTemplateImage(current, slot);
           payload.images = upsertTemplateImage(current, slot, uploaded.url, uploaded.publicId);
-          await this.deleteWorkAsset(previous?.publicId);
+          if (previous?.publicId && previous.publicId !== uploaded.publicId) {
+            await this.deleteWorkAsset(previous.publicId);
+          }
         }
       }
 
@@ -380,6 +435,7 @@ export default class WorkService implements IWorkService {
   }
 
   private async deleteWorkAsset(publicId?: string) {
+    // Only remove work-owned assets so shared template media stays available.
     if (isWorkCloudinaryId(publicId)) {
       await deleteCloudinaryImage(publicId);
     }

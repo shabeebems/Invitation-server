@@ -20,6 +20,10 @@ export default class UserRepository implements IUserRepository {
     });
   }
 
+  async findAll(): Promise<IUser[]> {
+    return UserModel.find().sort({ createdAt: -1 });
+  }
+
   async findByEmail(email: string): Promise<IUser | null> {
     return UserModel.findOne({ email: email.toLowerCase() }).select("+passwordHash");
   }

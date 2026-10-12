@@ -2,6 +2,7 @@ import { Request } from "express";
 import { inject, injectable } from "inversify";
 import { Types } from "mongoose";
 import { BadRequestError, NotFoundError } from "../../common/errors";
+import { assertAndClampContent } from "../../common/helpers/assert-content-limits";
 import { groupThemes } from "../../common/helpers/group-themes";
 import { guard } from "../../common/helpers/guard";
 import {
@@ -9,7 +10,7 @@ import {
   parseTemplateContent,
   requestBody,
 } from "../../common/helpers/parse-template-content";
-import { deleteCloudinaryImage, uploadTemplateImage } from "../../config/cloudinary";
+import { deleteCloudinaryImage, isManagedCloudinaryId, uploadTemplateImage } from "../../config/cloudinary";
 import TYPES from "../../constants/types";
 import { toTemplateJson } from "../../mappers/template.mapper";
 import {
@@ -71,7 +72,7 @@ export default class TemplateService implements ITemplateService {
       }
 
       const fields = requestBody(body);
-      const patch = parseTemplateContent(fields.content);
+      const patch = assertAndClampContent(parseTemplateContent(fields.content));
       const currentContent = JSON.parse(JSON.stringify(existing.content || {})) as ITemplateContent;
       const content: ITemplateContent = { ...currentContent, ...patch };
 
@@ -87,10 +88,39 @@ export default class TemplateService implements ITemplateService {
 
         const nextIds = new Set(content.galleryItems.map((item) => item.publicId).filter(Boolean));
         for (const item of previousItems) {
-          if (item.publicId && !nextIds.has(item.publicId)) {
+          if (item.publicId && !nextIds.has(item.publicId) && isManagedCloudinaryId(item.publicId)) {
             await deleteCloudinaryImage(item.publicId);
           }
         }
+      }
+
+      if (patch.loveStoryItems) {
+        const previousItems = currentContent.loveStoryItems || [];
+        content.loveStoryItems = patch.loveStoryItems.map((item, index) => ({
+          icon: item.icon || "",
+          date: item.date || "",
+          place: item.place || "",
+          title: item.title || "",
+          url: item.url || previousItems[index]?.url || "",
+          publicId: item.publicId || previousItems[index]?.publicId || "",
+        }));
+
+        const nextIds = new Set(content.loveStoryItems.map((item) => item.publicId).filter(Boolean));
+        for (const item of previousItems) {
+          if (item.publicId && !nextIds.has(item.publicId) && isManagedCloudinaryId(item.publicId)) {
+            await deleteCloudinaryImage(item.publicId);
+          }
+        }
+      }
+
+      if (patch.locationItems) {
+        content.locationItems = patch.locationItems.map((item) => ({
+          label: item.label || "",
+          title: item.title || "",
+          address: item.address || "",
+          mapsUrl: item.mapsUrl || "",
+          appleMapsUrl: item.appleMapsUrl || "",
+        }));
       }
 
       const payload: {
@@ -114,7 +144,25 @@ export default class TemplateService implements ITemplateService {
               publicId: uploaded.publicId,
             };
             payload.content = { ...content, galleryItems: items };
-            await deleteCloudinaryImage(previous?.publicId);
+            if (previous?.publicId && previous.publicId !== uploaded.publicId) {
+              await deleteCloudinaryImage(previous.publicId);
+            }
+          }
+        } else if (slot === "loveStory") {
+          const index = Number(fields.loveStoryIndex);
+          const items = [...(content.loveStoryItems || [])];
+
+          if (Number.isInteger(index) && index >= 0 && index < items.length) {
+            const previous = items[index];
+            items[index] = {
+              ...items[index],
+              url: uploaded.url,
+              publicId: uploaded.publicId,
+            };
+            payload.content = { ...content, loveStoryItems: items };
+            if (previous?.publicId && previous.publicId !== uploaded.publicId) {
+              await deleteCloudinaryImage(previous.publicId);
+            }
           }
         } else {
           const current = (existing.images || []).map((image) => ({
@@ -124,7 +172,9 @@ export default class TemplateService implements ITemplateService {
           }));
           const previous = findTemplateImage(current, slot);
           payload.images = upsertTemplateImage(current, slot, uploaded.url, uploaded.publicId);
-          await deleteCloudinaryImage(previous?.publicId);
+          if (previous?.publicId && previous.publicId !== uploaded.publicId) {
+            await deleteCloudinaryImage(previous.publicId);
+          }
         }
       }
 

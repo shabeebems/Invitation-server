@@ -15,6 +15,23 @@ export interface IGalleryItem {
   publicId: string;
 }
 
+export interface ILoveStoryItem {
+  icon: string;
+  date: string;
+  place: string;
+  title: string;
+  url: string;
+  publicId: string;
+}
+
+export interface ILocationItem {
+  label: string;
+  title: string;
+  address: string;
+  mapsUrl: string;
+  appleMapsUrl: string;
+}
+
 export interface ITemplateContent {
   bismillah: string;
   hostLabel: string;
@@ -29,7 +46,6 @@ export interface ITemplateContent {
   day: string;
   monthYear: string;
   time: string;
-  dayNote: string;
   venueLabel: string;
   venueName: string;
   venueHall: string;
@@ -52,6 +68,8 @@ export interface ITemplateContent {
   eventEndIso: string;
   countdownHeading: string;
   countdownLiveLabel: string;
+  countdownLayout: string;
+  ambianceEffect: string;
   programEyebrow: string;
   programTitle: string;
   programIntro: string;
@@ -59,11 +77,13 @@ export interface ITemplateContent {
   galleryEyebrow: string;
   galleryTitle: string;
   galleryIntro: string;
+  galleryLayout: string;
   galleryItems: IGalleryItem[];
   viewPhotoLabel: string;
   locationEyebrow: string;
   locationTitle: string;
   locationIntro: string;
+  locationLayout: string;
   destinationLabel: string;
   addressFull: string;
   addressShort: string;
@@ -87,24 +107,30 @@ export interface ITemplateContent {
   calendarModalDesc: string;
   googleCalendarLabel: string;
   icsCalendarLabel: string;
-  celebrantName: string;
-  ageLabel: string;
-  partyTitle: string;
   dressCode: string;
   rsvpNote: string;
   storyTitle: string;
   storyText: string;
-  receptionTitle: string;
-  ceremonyTitle: string;
-  musicTitle: string;
-  videoUrl: string;
-  videoPosterUrl: string;
-  coverTagline: string;
-  coverTitle: string;
+  meetCoupleTitle: string;
+  meetCoupleIntro: string;
+  meetCoupleLayout: string;
+  groomLabel: string;
+  groomBio: string;
+  groomDetail: string;
+  brideLabel: string;
+  brideBio: string;
+  brideDetail: string;
+  loveStoryTitle: string;
+  loveStoryLayout: string;
+  loveStoryItems: ILoveStoryItem[];
+  locationItems: ILocationItem[];
 }
 
-export type TemplateContentTextKey = Exclude<keyof ITemplateContent, "programItems" | "galleryItems">;
-export type TemplateContentFamily = "wedding" | "housewarming" | "birthday" | "shared";
+export type TemplateContentTextKey = Exclude<
+  keyof ITemplateContent,
+  "programItems" | "galleryItems" | "loveStoryItems" | "locationItems"
+>;
+export type TemplateContentFamily = "wedding" | "housewarming" | "shared";
 
 export const SHARED_CONTENT_KEYS: TemplateContentTextKey[] = [
   "bismillah",
@@ -127,7 +153,6 @@ export const WEDDING_ONLY_CONTENT_KEYS: TemplateContentTextKey[] = [
   "brideParentsLabel",
   "brideParents",
   "presenceLine",
-  "dayNote",
   "venueLabel",
   "venueHall",
   "mapsUrl",
@@ -136,13 +161,20 @@ export const WEDDING_ONLY_CONTENT_KEYS: TemplateContentTextKey[] = [
   "footer",
   "storyTitle",
   "storyText",
-  "receptionTitle",
-  "ceremonyTitle",
-  "musicTitle",
-  "videoUrl",
-  "videoPosterUrl",
-  "coverTagline",
-  "coverTitle",
+  "dressCode",
+  "rsvpNote",
+  "meetCoupleTitle",
+  "meetCoupleIntro",
+  "meetCoupleLayout",
+  "groomLabel",
+  "groomBio",
+  "groomDetail",
+  "brideLabel",
+  "brideBio",
+  "brideDetail",
+  "loveStoryTitle",
+  "loveStoryLayout",
+  "ambianceEffect",
 ];
 
 export const HOUSEWARMING_ONLY_CONTENT_KEYS: TemplateContentTextKey[] = [
@@ -158,16 +190,19 @@ export const HOUSEWARMING_ONLY_CONTENT_KEYS: TemplateContentTextKey[] = [
   "eventEndIso",
   "countdownHeading",
   "countdownLiveLabel",
+  "countdownLayout",
   "programEyebrow",
   "programTitle",
   "programIntro",
   "galleryEyebrow",
   "galleryTitle",
   "galleryIntro",
+  "galleryLayout",
   "viewPhotoLabel",
   "locationEyebrow",
   "locationTitle",
   "locationIntro",
+  "locationLayout",
   "destinationLabel",
   "addressFull",
   "addressShort",
@@ -193,33 +228,6 @@ export const HOUSEWARMING_ONLY_CONTENT_KEYS: TemplateContentTextKey[] = [
   "icsCalendarLabel",
 ];
 
-export const BIRTHDAY_ONLY_CONTENT_KEYS: TemplateContentTextKey[] = [
-  "celebrantName",
-  "ageLabel",
-  "partyTitle",
-  "dressCode",
-  "rsvpNote",
-];
-
-export const BIRTHDAY_SHARED_FROM_WEDDING: TemplateContentTextKey[] = [
-  "hostLabel",
-  "introLine",
-  "presenceLine",
-  "venueLabel",
-  "venueHall",
-  "mapsUrl",
-  "hashtag",
-  "inviteLine",
-  "footer",
-];
-
-export const BIRTHDAY_SHARED_FROM_HOUSE: TemplateContentTextKey[] = [
-  "eventDateIso",
-  "eventEndIso",
-  "addressFull",
-  "googleMapsUrl",
-];
-
 export const WEDDING_SHARED_FROM_HOUSE: TemplateContentTextKey[] = [
   "envelopeTagline",
   "skipLabel",
@@ -228,16 +236,19 @@ export const WEDDING_SHARED_FROM_HOUSE: TemplateContentTextKey[] = [
   "eventEndIso",
   "countdownHeading",
   "countdownLiveLabel",
+  "countdownLayout",
   "programEyebrow",
   "programTitle",
   "programIntro",
   "galleryEyebrow",
   "galleryTitle",
   "galleryIntro",
+  "galleryLayout",
   "viewPhotoLabel",
   "locationEyebrow",
   "locationTitle",
   "locationIntro",
+  "locationLayout",
   "destinationLabel",
   "addressFull",
   "addressShort",
@@ -262,25 +273,15 @@ export const WEDDING_SHARED_FROM_HOUSE: TemplateContentTextKey[] = [
   "navLocation",
 ];
 
-export const WEDDING_SHARED_FROM_BIRTHDAY: TemplateContentTextKey[] = [
-  "dressCode",
-  "rsvpNote",
-];
-
 export const TEMPLATE_CONTENT_KEYS: TemplateContentTextKey[] = [
   ...SHARED_CONTENT_KEYS,
   ...WEDDING_ONLY_CONTENT_KEYS,
   ...HOUSEWARMING_ONLY_CONTENT_KEYS,
-  ...BIRTHDAY_ONLY_CONTENT_KEYS,
 ];
 
 export function contentFamilyFromCategory(name: string): TemplateContentFamily {
   if (/house\s*warm/i.test(name)) {
     return "housewarming";
-  }
-
-  if (/birthday/i.test(name)) {
-    return "birthday";
   }
 
   if (/wedding/i.test(name)) {
@@ -297,18 +298,10 @@ export function compactTemplateContent(
   const source = content || {};
   const omit = new Set<string>(
     family === "housewarming"
-      ? [...WEDDING_ONLY_CONTENT_KEYS, ...BIRTHDAY_ONLY_CONTENT_KEYS]
+      ? [...WEDDING_ONLY_CONTENT_KEYS]
       : family === "wedding"
-        ? [
-            ...HOUSEWARMING_ONLY_CONTENT_KEYS.filter((key) => !WEDDING_SHARED_FROM_HOUSE.includes(key)),
-            ...BIRTHDAY_ONLY_CONTENT_KEYS.filter((key) => !WEDDING_SHARED_FROM_BIRTHDAY.includes(key)),
-          ]
-        : family === "birthday"
-          ? [
-              ...WEDDING_ONLY_CONTENT_KEYS.filter((key) => !BIRTHDAY_SHARED_FROM_WEDDING.includes(key)),
-              ...HOUSEWARMING_ONLY_CONTENT_KEYS.filter((key) => !BIRTHDAY_SHARED_FROM_HOUSE.includes(key)),
-            ]
-          : []
+        ? [...HOUSEWARMING_ONLY_CONTENT_KEYS.filter((key) => !WEDDING_SHARED_FROM_HOUSE.includes(key))]
+        : []
   );
   const next: Partial<ITemplateContent> = {};
 
@@ -329,6 +322,14 @@ export function compactTemplateContent(
 
   if (Array.isArray(source.galleryItems)) {
     next.galleryItems = source.galleryItems;
+  }
+
+  if (Array.isArray(source.loveStoryItems)) {
+    next.loveStoryItems = source.loveStoryItems;
+  }
+
+  if (Array.isArray(source.locationItems)) {
+    next.locationItems = source.locationItems;
   }
 
   return next;
@@ -408,11 +409,36 @@ const galleryItemSchema = new Schema<IGalleryItem>(
   { _id: false }
 );
 
+const loveStoryItemSchema = new Schema<ILoveStoryItem>(
+  {
+    icon: { type: String, default: "" },
+    date: { type: String, default: "" },
+    place: { type: String, default: "" },
+    title: { type: String, default: "" },
+    url: { type: String, default: "" },
+    publicId: { type: String, default: "" },
+  },
+  { _id: false }
+);
+
+const locationItemSchema = new Schema<ILocationItem>(
+  {
+    label: { type: String, default: "" },
+    title: { type: String, default: "" },
+    address: { type: String, default: "" },
+    mapsUrl: { type: String, default: "" },
+    appleMapsUrl: { type: String, default: "" },
+  },
+  { _id: false }
+);
+
 export const templateContentSchema = new Schema<ITemplateContent>(
   {
     ...contentFields,
     programItems: { type: [programItemSchema] },
     galleryItems: { type: [galleryItemSchema] },
+    loveStoryItems: { type: [loveStoryItemSchema] },
+    locationItems: { type: [locationItemSchema] },
   },
   { _id: false }
 );

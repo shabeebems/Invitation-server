@@ -56,6 +56,10 @@ import ThemeService from "../services/implementations/theme-service";
 import IThemeService from "../services/interfaces/theme-service.interface";
 import WorkService from "../services/implementations/work-service";
 import IWorkService from "../services/interfaces/work-service.interface";
+import UserAdminController from "../controllers/implementations/user-admin-controller";
+import IUserAdminController from "../controllers/interfaces/user-admin-controller.interface";
+import UserAdminService from "../services/implementations/user-admin-service";
+import IUserAdminService from "../services/interfaces/user-admin-service.interface";
 
 const container = new Container();
 
@@ -92,5 +96,8 @@ container.bind<AccountSecurityController>(TYPES.IAccountSecurityController).to(A
 container.bind<SessionController>(TYPES.ISessionController).to(SessionController);
 container.bind<IDashboardService>(TYPES.IDashboardService).to(DashboardService);
 container.bind<IDashboardController>(TYPES.IDashboardController).to(DashboardController);
+
+container.bind<IUserAdminService>(TYPES.IUserAdminService).to(UserAdminService);
+container.bind<IUserAdminController>(TYPES.IUserAdminController).to(UserAdminController);
 
 export default container;

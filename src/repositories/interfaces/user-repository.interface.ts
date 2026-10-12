@@ -13,6 +13,7 @@ export type UserInput = {
 
 export default interface IUserRepository {
   create(user: UserInput): Promise<IUser>;
+  findAll(): Promise<IUser[]>;
   findByEmail(email: string): Promise<IUser | null>;
   findById(id: string): Promise<IUser | null>;
   findAdmin(): Promise<IUser | null>;

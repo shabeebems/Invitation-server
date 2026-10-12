@@ -1,5 +1,7 @@
 import {
   IGalleryItem,
+  ILocationItem,
+  ILoveStoryItem,
   IProgramItem,
   ITemplateContent,
   TEMPLATE_CONTENT_KEYS,
@@ -50,6 +52,33 @@ export function parseTemplateContent(raw: unknown): Partial<ITemplateContent> {
         url: typeof row.url === "string" && !row.url.startsWith("blob:") ? row.url : "",
         publicId: typeof row.publicId === "string" ? row.publicId : "",
       } satisfies IGalleryItem;
+    });
+  }
+
+  if (Array.isArray(source.loveStoryItems)) {
+    content.loveStoryItems = source.loveStoryItems.map((item) => {
+      const row = item && typeof item === "object" ? (item as Record<string, unknown>) : {};
+      return {
+        icon: typeof row.icon === "string" ? row.icon : "",
+        date: typeof row.date === "string" ? row.date : "",
+        place: typeof row.place === "string" ? row.place : "",
+        title: typeof row.title === "string" ? row.title : "",
+        url: typeof row.url === "string" && !row.url.startsWith("blob:") ? row.url : "",
+        publicId: typeof row.publicId === "string" ? row.publicId : "",
+      } satisfies ILoveStoryItem;
+    });
+  }
+
+  if (Array.isArray(source.locationItems)) {
+    content.locationItems = source.locationItems.map((item) => {
+      const row = item && typeof item === "object" ? (item as Record<string, unknown>) : {};
+      return {
+        label: typeof row.label === "string" ? row.label : "",
+        title: typeof row.title === "string" ? row.title : "",
+        address: typeof row.address === "string" ? row.address : "",
+        mapsUrl: typeof row.mapsUrl === "string" ? row.mapsUrl : "",
+        appleMapsUrl: typeof row.appleMapsUrl === "string" ? row.appleMapsUrl : "",
+      } satisfies ILocationItem;
     });
   }
 

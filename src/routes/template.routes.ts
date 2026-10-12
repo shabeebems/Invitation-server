@@ -19,6 +19,7 @@ templateRouter.get(
 );
 templateRouter.put(
   "/:slug/theme",
+  requireAdmin,
   asyncHandler((req, res) => templateController.selectTheme(req, res))
 );
 templateRouter.put(

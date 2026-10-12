@@ -44,13 +44,11 @@ export default class ThemeRepository implements IThemeRepository {
       return template;
     }
 
-    let theme = await ThemeModel.findOne({ templateId: template._id }).sort({ createdAt: 1 });
+    const theme = await ThemeModel.findOne({ templateId: template._id }).sort({ createdAt: 1 });
 
+    // Templates with no selectable theme variants keep a single fixed look.
     if (!theme) {
-      theme = await ThemeModel.create({
-        title: template.name,
-        templateId: template._id,
-      });
+      return template;
     }
 
     const updated = await TemplateModel.findByIdAndUpdate(

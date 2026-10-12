@@ -5,6 +5,7 @@ import categoryRouter from "./category.routes";
 import templateRouter from "./template.routes";
 import themeRouter from "./theme.routes";
 import workRouter from "./work.routes";
+import userRouter from "./user.routes";
 
 const router = Router();
 
@@ -14,5 +15,6 @@ router.use("/categories", categoryRouter);
 router.use("/templates", templateRouter);
 router.use("/themes", themeRouter);
 router.use("/works", workRouter);
+router.use("/users", userRouter);
 
 export default router;

@@ -32,6 +32,9 @@ const TYPES = {
   ISessionController: Symbol.for("ISessionController"),
   IDashboardService: Symbol.for("IDashboardService"),
   IDashboardController: Symbol.for("IDashboardController"),
+
+  IUserAdminService: Symbol.for("IUserAdminService"),
+  IUserAdminController: Symbol.for("IUserAdminController"),
 };
 
 export default TYPES;
