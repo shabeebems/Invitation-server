@@ -10,6 +10,7 @@ export type AuthLocals = {
   userId: string;
   sessionId?: string;
   role: "customer" | "admin";
+  email?: string;
 };
 
 const requireUser: RequestHandler = async (req, res, next) => {
@@ -30,7 +31,12 @@ const requireUser: RequestHandler = async (req, res, next) => {
     }
 
     const role = user.role === "admin" || user.isAdmin ? "admin" : "customer";
-    res.locals.auth = { userId: String(user._id), sessionId: payload.sessionId, role } satisfies AuthLocals;
+    res.locals.auth = {
+      userId: String(user._id),
+      sessionId: payload.sessionId,
+      role,
+      email: user.email,
+    } satisfies AuthLocals;
     next();
   } catch (error) {
     next(error);

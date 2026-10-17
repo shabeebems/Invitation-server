@@ -6,6 +6,7 @@ import templateRouter from "./template.routes";
 import themeRouter from "./theme.routes";
 import workRouter from "./work.routes";
 import userRouter from "./user.routes";
+import paymentRouter from "./payment.routes";
 
 const router = Router();
 
@@ -16,5 +17,6 @@ router.use("/templates", templateRouter);
 router.use("/themes", themeRouter);
 router.use("/works", workRouter);
 router.use("/users", userRouter);
+router.use("/payments", paymentRouter);
 
 export default router;

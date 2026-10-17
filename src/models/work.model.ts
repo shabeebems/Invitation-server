@@ -17,6 +17,10 @@ export interface IWork extends Document {
   templateId: Types.ObjectId;
   selectedThemeId?: Types.ObjectId;
   isActive: boolean;
+  isPublished: boolean;
+  paymentStatus: "unpaid" | "paid";
+  orderId?: Types.ObjectId;
+  publishedAt?: Date;
   images: ITemplateImage[];
   content: ITemplateContent;
   createdAt: Date;
@@ -68,6 +72,27 @@ const workSchema = new Schema<IWork>(
     isActive: {
       type: Boolean,
       default: true,
+    },
+    isPublished: {
+      type: Boolean,
+      default: true,
+      index: true,
+    },
+    paymentStatus: {
+      type: String,
+      enum: ["unpaid", "paid"],
+      default: "unpaid",
+      index: true,
+    },
+    orderId: {
+      type: Schema.Types.ObjectId,
+      ref: "Order",
+      default: null,
+      index: true,
+    },
+    publishedAt: {
+      type: Date,
+      default: null,
     },
     images: {
       type: [templateImageSchema],

@@ -61,6 +61,15 @@ import IUserAdminController from "../controllers/interfaces/user-admin-controlle
 import UserAdminService from "../services/implementations/user-admin-service";
 import IUserAdminService from "../services/interfaces/user-admin-service.interface";
 
+import OrderRepository from "../repositories/implementations/order-repository";
+import IOrderRepository from "../repositories/interfaces/order-repository.interface";
+import RazorpayGateway from "../services/implementations/razorpay-gateway";
+import IPaymentGateway from "../services/interfaces/payment-gateway.interface";
+import PaymentService from "../services/implementations/payment-service";
+import IPaymentService from "../services/interfaces/payment-service.interface";
+import PaymentController from "../controllers/implementations/payment-controller";
+import IPaymentController from "../controllers/interfaces/payment-controller.interface";
+
 const container = new Container();
 
 container.bind<ICategoryRepository>(TYPES.ICategoryRepository).to(CategoryRepository);
@@ -99,5 +108,10 @@ container.bind<IDashboardController>(TYPES.IDashboardController).to(DashboardCon
 
 container.bind<IUserAdminService>(TYPES.IUserAdminService).to(UserAdminService);
 container.bind<IUserAdminController>(TYPES.IUserAdminController).to(UserAdminController);
+
+container.bind<IOrderRepository>(TYPES.IOrderRepository).to(OrderRepository);
+container.bind<IPaymentGateway>(TYPES.IPaymentGateway).to(RazorpayGateway);
+container.bind<IPaymentService>(TYPES.IPaymentService).to(PaymentService);
+container.bind<IPaymentController>(TYPES.IPaymentController).to(PaymentController);
 
 export default container;

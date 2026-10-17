@@ -34,6 +34,7 @@ import {
 import { IWork } from "../../models/work.model";
 import type ICategoryRepository from "../../repositories/interfaces/category-repository.interface";
 import type ITemplateRepository from "../../repositories/interfaces/template-repository.interface";
+import type IOrderRepository from "../../repositories/interfaces/order-repository.interface";
 import type IThemeRepository from "../../repositories/interfaces/theme-repository.interface";
 import type IWorkRepository from "../../repositories/interfaces/work-repository.interface";
 import IWorkService, { WorkActor } from "../interfaces/work-service.interface";
@@ -66,7 +67,8 @@ export default class WorkService implements IWorkService {
     @inject(TYPES.IWorkRepository) private readonly workRepository: IWorkRepository,
     @inject(TYPES.ITemplateRepository) private readonly templateRepository: ITemplateRepository,
     @inject(TYPES.ICategoryRepository) private readonly categoryRepository: ICategoryRepository,
-    @inject(TYPES.IThemeRepository) private readonly themeRepository: IThemeRepository
+    @inject(TYPES.IThemeRepository) private readonly themeRepository: IThemeRepository,
+    @inject(TYPES.IOrderRepository) private readonly orderRepository: IOrderRepository
   ) {}
 
   async list(actor: WorkActor) {
@@ -153,6 +155,18 @@ export default class WorkService implements IWorkService {
         );
       }
 
+      const orderId = String(fields.orderId || "").trim();
+      let paymentStatus: "unpaid" | "paid" = "unpaid";
+      let linkedOrderId: Types.ObjectId | null = null;
+
+      if (orderId && Types.ObjectId.isValid(orderId)) {
+        const order = await this.orderRepository.findById(orderId);
+        if (order && this.idOf(order.userId) === userId && order.status === "PAID") {
+          paymentStatus = "paid";
+          linkedOrderId = order._id as Types.ObjectId;
+        }
+      }
+
       const work = await this.workRepository.create({
         slug,
         name,
@@ -161,9 +175,19 @@ export default class WorkService implements IWorkService {
         categoryId,
         templateId,
         selectedThemeId,
+        paymentStatus,
+        orderId: linkedOrderId,
+        isPublished: paymentStatus === "paid",
+        publishedAt: paymentStatus === "paid" ? new Date() : null,
         images: snapshot.images,
         content: compactTemplateContent(mergedContent, family) as ITemplateContent,
       });
+
+      if (linkedOrderId) {
+        await this.orderRepository.update(String(linkedOrderId), {
+          workId: work._id as Types.ObjectId,
+        });
+      }
 
       const [json] = await this.withThemes([work]);
       return json;

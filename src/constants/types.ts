@@ -35,6 +35,11 @@ const TYPES = {
 
   IUserAdminService: Symbol.for("IUserAdminService"),
   IUserAdminController: Symbol.for("IUserAdminController"),
+
+  IOrderRepository: Symbol.for("IOrderRepository"),
+  IPaymentGateway: Symbol.for("IPaymentGateway"),
+  IPaymentService: Symbol.for("IPaymentService"),
+  IPaymentController: Symbol.for("IPaymentController"),
 };
 
 export default TYPES;

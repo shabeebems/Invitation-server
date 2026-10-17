@@ -30,6 +30,10 @@ export default class WorkRepository implements IWorkRepository {
     return WorkModel.findOne({ slug: slug.toLowerCase() }).populate([...populatePaths]);
   }
 
+  async findById(id: string): Promise<IWork | null> {
+    return WorkModel.findById(id).populate([...populatePaths]);
+  }
+
   async slugExists(slug: string): Promise<boolean> {
     const existing = await WorkModel.exists({ slug: slug.toLowerCase() });
     return Boolean(existing);
@@ -45,6 +49,10 @@ export default class WorkRepository implements IWorkRepository {
       templateId: data.templateId,
       selectedThemeId: data.selectedThemeId || null,
       isActive: data.isActive ?? true,
+      paymentStatus: data.paymentStatus || "unpaid",
+      orderId: data.orderId || null,
+      isPublished: data.isPublished ?? (data.paymentStatus === "paid"),
+      publishedAt: data.publishedAt || (data.paymentStatus === "paid" ? new Date() : null),
       images: data.images || [],
       content: data.content || {},
     });
