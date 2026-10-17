@@ -19,6 +19,7 @@ const UNSET_FIELDS = [
   "content.skipLabel",
   "content.viewPhotoLabel",
   "content.addressFull",
+  "content.appleMapsUrl",
   "content.openGoogleLabel",
   "content.openAppleLabel",
   "content.copyAddressLabel",
@@ -74,7 +75,7 @@ async function main() {
     { $unset: unsetDoc }
   );
 
-  // Also drop globally removed keys from celestial templates/works (seed leftovers).
+  // Also drop globally removed obsolete keys from all templates/works.
   const globalUnset = {
     "content.dayNote": "",
     "content.coverTagline": "",

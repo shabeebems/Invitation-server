@@ -29,7 +29,6 @@ export interface ILocationItem {
   title: string;
   address: string;
   mapsUrl: string;
-  appleMapsUrl: string;
 }
 
 export interface ITemplateContent {
@@ -69,7 +68,9 @@ export interface ITemplateContent {
   countdownHeading: string;
   countdownLiveLabel: string;
   countdownLayout: string;
+  heroLayout: string;
   ambianceEffect: string;
+  programLayout: string;
   programEyebrow: string;
   programTitle: string;
   programIntro: string;
@@ -88,19 +89,12 @@ export interface ITemplateContent {
   addressFull: string;
   addressShort: string;
   googleMapsUrl: string;
-  appleMapsUrl: string;
   copyAddressLabel: string;
-  openGoogleLabel: string;
-  openAppleLabel: string;
   hamdalah: string;
   closingBlessing: string;
   closingPresence: string;
   replayLabel: string;
   craftedBy: string;
-  navCelebration: string;
-  navProgram: string;
-  navTour: string;
-  navLocation: string;
   addToCalendarLabel: string;
   getDirectionsLabel: string;
   calendarModalTitle: string;
@@ -124,11 +118,13 @@ export interface ITemplateContent {
   loveStoryLayout: string;
   loveStoryItems: ILoveStoryItem[];
   locationItems: ILocationItem[];
+  /** Which template sections render (ids from template-sections catalog). */
+  enabledSections: string[];
 }
 
 export type TemplateContentTextKey = Exclude<
   keyof ITemplateContent,
-  "programItems" | "galleryItems" | "loveStoryItems" | "locationItems"
+  "programItems" | "galleryItems" | "loveStoryItems" | "locationItems" | "enabledSections"
 >;
 export type TemplateContentFamily = "wedding" | "housewarming" | "shared";
 
@@ -143,6 +139,7 @@ export const SHARED_CONTENT_KEYS: TemplateContentTextKey[] = [
   "venueCity",
   "blessing",
   "shareText",
+  "ambianceEffect",
 ];
 
 export const WEDDING_ONLY_CONTENT_KEYS: TemplateContentTextKey[] = [
@@ -174,7 +171,11 @@ export const WEDDING_ONLY_CONTENT_KEYS: TemplateContentTextKey[] = [
   "brideDetail",
   "loveStoryTitle",
   "loveStoryLayout",
-  "ambianceEffect",
+  "galleryEyebrow",
+  "galleryTitle",
+  "galleryIntro",
+  "galleryLayout",
+  "viewPhotoLabel",
 ];
 
 export const HOUSEWARMING_ONLY_CONTENT_KEYS: TemplateContentTextKey[] = [
@@ -191,14 +192,11 @@ export const HOUSEWARMING_ONLY_CONTENT_KEYS: TemplateContentTextKey[] = [
   "countdownHeading",
   "countdownLiveLabel",
   "countdownLayout",
+  "heroLayout",
+  "programLayout",
   "programEyebrow",
   "programTitle",
   "programIntro",
-  "galleryEyebrow",
-  "galleryTitle",
-  "galleryIntro",
-  "galleryLayout",
-  "viewPhotoLabel",
   "locationEyebrow",
   "locationTitle",
   "locationIntro",
@@ -207,21 +205,13 @@ export const HOUSEWARMING_ONLY_CONTENT_KEYS: TemplateContentTextKey[] = [
   "addressFull",
   "addressShort",
   "googleMapsUrl",
-  "appleMapsUrl",
   "copyAddressLabel",
-  "openGoogleLabel",
-  "openAppleLabel",
   "hamdalah",
   "closingBlessing",
   "closingPresence",
   "replayLabel",
   "craftedBy",
-  "navCelebration",
-  "navProgram",
-  "navTour",
-  "navLocation",
   "addToCalendarLabel",
-  "getDirectionsLabel",
   "calendarModalTitle",
   "calendarModalDesc",
   "googleCalendarLabel",
@@ -240,11 +230,6 @@ export const WEDDING_SHARED_FROM_HOUSE: TemplateContentTextKey[] = [
   "programEyebrow",
   "programTitle",
   "programIntro",
-  "galleryEyebrow",
-  "galleryTitle",
-  "galleryIntro",
-  "galleryLayout",
-  "viewPhotoLabel",
   "locationEyebrow",
   "locationTitle",
   "locationIntro",
@@ -253,12 +238,8 @@ export const WEDDING_SHARED_FROM_HOUSE: TemplateContentTextKey[] = [
   "addressFull",
   "addressShort",
   "googleMapsUrl",
-  "appleMapsUrl",
   "copyAddressLabel",
-  "openGoogleLabel",
-  "openAppleLabel",
   "addToCalendarLabel",
-  "getDirectionsLabel",
   "calendarModalTitle",
   "calendarModalDesc",
   "googleCalendarLabel",
@@ -267,10 +248,6 @@ export const WEDDING_SHARED_FROM_HOUSE: TemplateContentTextKey[] = [
   "closingPresence",
   "replayLabel",
   "craftedBy",
-  "navCelebration",
-  "navProgram",
-  "navTour",
-  "navLocation",
 ];
 
 export const TEMPLATE_CONTENT_KEYS: TemplateContentTextKey[] = [
@@ -320,7 +297,7 @@ export function compactTemplateContent(
     next.programItems = source.programItems;
   }
 
-  if (Array.isArray(source.galleryItems)) {
+  if (family !== "housewarming" && Array.isArray(source.galleryItems)) {
     next.galleryItems = source.galleryItems;
   }
 
@@ -330,6 +307,12 @@ export function compactTemplateContent(
 
   if (Array.isArray(source.locationItems)) {
     next.locationItems = source.locationItems;
+  }
+
+  if (Array.isArray(source.enabledSections)) {
+    next.enabledSections = source.enabledSections.filter(
+      (id): id is string => typeof id === "string" && id.trim().length > 0
+    );
   }
 
   return next;
@@ -427,7 +410,6 @@ const locationItemSchema = new Schema<ILocationItem>(
     title: { type: String, default: "" },
     address: { type: String, default: "" },
     mapsUrl: { type: String, default: "" },
-    appleMapsUrl: { type: String, default: "" },
   },
   { _id: false }
 );
@@ -439,6 +421,7 @@ export const templateContentSchema = new Schema<ITemplateContent>(
     galleryItems: { type: [galleryItemSchema] },
     loveStoryItems: { type: [loveStoryItemSchema] },
     locationItems: { type: [locationItemSchema] },
+    enabledSections: { type: [String], default: undefined },
   },
   { _id: false }
 );

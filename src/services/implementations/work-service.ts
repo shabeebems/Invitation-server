@@ -11,6 +11,10 @@ import {
   requestBody,
 } from "../../common/helpers/parse-template-content";
 import {
+  clampEnabledSections,
+  familyFromTemplateSlug,
+} from "../../common/helpers/template-sections";
+import {
   deleteCloudinaryImage,
   isWorkCloudinaryId,
   uploadImageFromUrl,
@@ -136,6 +140,19 @@ export default class WorkService implements IWorkService {
           (template.selectedThemeId ? this.idOf(template.selectedThemeId) : "")
       );
 
+      const mergedContent = { ...snapshot.content, ...details };
+      if (Array.isArray(mergedContent.enabledSections) || Array.isArray(details.enabledSections)) {
+        mergedContent.enabledSections = clampEnabledSections(
+          familyFromTemplateSlug(template.slug),
+          mergedContent.enabledSections
+        );
+      } else {
+        mergedContent.enabledSections = clampEnabledSections(
+          familyFromTemplateSlug(template.slug),
+          undefined
+        );
+      }
+
       const work = await this.workRepository.create({
         slug,
         name,
@@ -145,7 +162,7 @@ export default class WorkService implements IWorkService {
         templateId,
         selectedThemeId,
         images: snapshot.images,
-        content: compactTemplateContent({ ...snapshot.content, ...details }, family) as ITemplateContent,
+        content: compactTemplateContent(mergedContent, family) as ITemplateContent,
       });
 
       const [json] = await this.withThemes([work]);
@@ -170,8 +187,8 @@ export default class WorkService implements IWorkService {
       this.assertCanMutate(existing, actor);
 
       const fields = requestBody(body);
-      const patch = assertAndClampContent(parseTemplateContent(fields.content));
       const currentContent = JSON.parse(JSON.stringify(existing.content || {})) as ITemplateContent;
+      const patch = assertAndClampContent(parseTemplateContent(fields.content), currentContent);
       const content: ITemplateContent = { ...currentContent, ...patch };
 
       if (patch.galleryItems) {
@@ -217,8 +234,17 @@ export default class WorkService implements IWorkService {
           title: item.title || "",
           address: item.address || "",
           mapsUrl: item.mapsUrl || "",
-          appleMapsUrl: item.appleMapsUrl || "",
         }));
+      }
+
+      if (Array.isArray(patch.enabledSections)) {
+        const template = existing.templateId
+          ? await this.templateRepository.findById(this.idOf(existing.templateId))
+          : null;
+        content.enabledSections = clampEnabledSections(
+          familyFromTemplateSlug(template?.slug || ""),
+          patch.enabledSections
+        );
       }
 
       const payload: {

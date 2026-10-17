@@ -52,7 +52,9 @@ export const CONTENT_FIELD_MAX: Partial<Record<TemplateContentTextKey, number>> 
   countdownHeading: 80,
   countdownLiveLabel: 80,
   countdownLayout: 32,
+  heroLayout: 32,
   ambianceEffect: 32,
+  programLayout: 32,
   programEyebrow: 40,
   programTitle: 80,
   programIntro: 280,
@@ -69,19 +71,12 @@ export const CONTENT_FIELD_MAX: Partial<Record<TemplateContentTextKey, number>> 
   addressFull: 200,
   addressShort: 80,
   googleMapsUrl: 500,
-  appleMapsUrl: 500,
   copyAddressLabel: 40,
-  openGoogleLabel: 40,
-  openAppleLabel: 40,
   hamdalah: 80,
   closingBlessing: 400,
   closingPresence: 120,
   replayLabel: 40,
   craftedBy: 80,
-  navCelebration: 40,
-  navProgram: 40,
-  navTour: 40,
-  navLocation: 40,
   addToCalendarLabel: 40,
   getDirectionsLabel: 40,
   calendarModalTitle: 80,
@@ -133,7 +128,6 @@ export const LOCATION_ITEM_MAX = {
   title: 80,
   address: 200,
   mapsUrl: 500,
-  appleMapsUrl: 500,
 } as const;
 
 export const MAX_PROGRAM_ITEMS = 16;
@@ -219,12 +213,6 @@ export function findContentLimitViolations(content: Partial<ITemplateContent>): 
       pushViolation(violations, `locationItems[${index}].title`, item.title.length, LOCATION_ITEM_MAX.title);
       pushViolation(violations, `locationItems[${index}].address`, item.address.length, LOCATION_ITEM_MAX.address);
       pushViolation(violations, `locationItems[${index}].mapsUrl`, item.mapsUrl.length, LOCATION_ITEM_MAX.mapsUrl);
-      pushViolation(
-        violations,
-        `locationItems[${index}].appleMapsUrl`,
-        (item.appleMapsUrl || "").length,
-        LOCATION_ITEM_MAX.appleMapsUrl
-      );
     });
   }
 
@@ -283,9 +271,16 @@ export function clampTemplateContent(content: Partial<ITemplateContent>): Partia
         title: clampText(item.title || "", LOCATION_ITEM_MAX.title),
         address: clampText(item.address || "", LOCATION_ITEM_MAX.address),
         mapsUrl: clampText(item.mapsUrl || "", LOCATION_ITEM_MAX.mapsUrl),
-        appleMapsUrl: clampText(item.appleMapsUrl || "", LOCATION_ITEM_MAX.appleMapsUrl),
       })
     );
+  }
+
+  if (Array.isArray(next.enabledSections)) {
+    next.enabledSections = next.enabledSections
+      .filter((item): item is string => typeof item === "string")
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .slice(0, 32);
   }
 
   return next;

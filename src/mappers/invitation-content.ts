@@ -88,9 +88,11 @@ export function serializeInvitationContent(
             title: item.title || "",
             address: item.address || "",
             mapsUrl: item.mapsUrl || "",
-            appleMapsUrl: item.appleMapsUrl || "",
           })),
         }
+      : {}),
+    ...(Array.isArray(compacted.enabledSections)
+      ? { enabledSections: compacted.enabledSections.filter((id) => typeof id === "string" && id) }
       : {}),
   };
 }

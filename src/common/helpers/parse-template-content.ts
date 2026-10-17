@@ -77,9 +77,14 @@ export function parseTemplateContent(raw: unknown): Partial<ITemplateContent> {
         title: typeof row.title === "string" ? row.title : "",
         address: typeof row.address === "string" ? row.address : "",
         mapsUrl: typeof row.mapsUrl === "string" ? row.mapsUrl : "",
-        appleMapsUrl: typeof row.appleMapsUrl === "string" ? row.appleMapsUrl : "",
       } satisfies ILocationItem;
     });
+  }
+
+  if (Array.isArray(source.enabledSections)) {
+    content.enabledSections = source.enabledSections.filter(
+      (item): item is string => typeof item === "string" && item.trim().length > 0
+    );
   }
 
   return content;

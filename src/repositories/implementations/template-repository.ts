@@ -43,17 +43,27 @@ export default class TemplateRepository implements ITemplateRepository {
   }
 
   async upsertBySlug(data: TemplateInput): Promise<ITemplate> {
+    const $set: Record<string, unknown> = {
+      slug: data.slug.toLowerCase(),
+      name: data.name,
+      description: data.description || "",
+      categoryId: data.categoryId,
+      isActive: data.isActive ?? true,
+      content: data.content || {},
+    };
+
+    // Only overwrite images when the caller passes them; otherwise keep DB values
+    // so editor/Cloudinary uploads stay editable across re-seeds.
+    const update: Record<string, unknown> = { $set };
+    if (data.images !== undefined) {
+      $set.images = data.images;
+    } else {
+      update.$setOnInsert = { images: [] };
+    }
+
     const template = await TemplateModel.findOneAndUpdate(
       { slug: data.slug.toLowerCase() },
-      {
-        slug: data.slug.toLowerCase(),
-        name: data.name,
-        description: data.description || "",
-        categoryId: data.categoryId,
-        isActive: data.isActive ?? true,
-        images: data.images || [],
-        content: data.content || {},
-      },
+      update,
       { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true }
     );
 

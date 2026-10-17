@@ -9,11 +9,14 @@
     "test": "tsx --test src/services/auth/refresh-decision.test.ts",
     "start": "node dist/server.js",
     "seed:assets": "tsx src/scripts/upload-site-assets.ts",
-    "seed:templates": "tsx src/scripts/import-royal-reception.ts && tsx src/scripts/import-parambil-house.ts && tsx src/scripts/import-celestial-starlight.ts",
+    "seed:templates": "tsx src/scripts/import-royal-reception.ts && tsx src/scripts/import-parambil-house.ts",
+    "seed:enabled-sections": "tsx src/scripts/seed-enabled-sections.ts",
+    "seed:house-layouts": "tsx src/scripts/seed-house-layouts.ts",
     "cleanup:templates": "tsx src/scripts/cleanup-removed-templates.ts",
     "cleanup:royal-themes": "tsx src/scripts/cleanup-royal-themes.ts",
     "cleanup:royal-content": "tsx src/scripts/cleanup-royal-content.ts",
-    "cleanup:royal": "tsx src/scripts/cleanup-royal-themes.ts && tsx src/scripts/cleanup-royal-content.ts"
+    "cleanup:royal": "tsx src/scripts/cleanup-royal-themes.ts && tsx src/scripts/cleanup-royal-content.ts",
+    "cleanup:maps-legacy": "tsx src/scripts/cleanup-maps-legacy.ts"
   },
   "keywords": [],
   "author": "",

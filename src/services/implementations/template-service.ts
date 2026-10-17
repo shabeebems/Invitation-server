@@ -10,6 +10,10 @@ import {
   parseTemplateContent,
   requestBody,
 } from "../../common/helpers/parse-template-content";
+import {
+  clampEnabledSections,
+  familyFromTemplateSlug,
+} from "../../common/helpers/template-sections";
 import { deleteCloudinaryImage, isManagedCloudinaryId, uploadTemplateImage } from "../../config/cloudinary";
 import TYPES from "../../constants/types";
 import { toTemplateJson } from "../../mappers/template.mapper";
@@ -72,8 +76,8 @@ export default class TemplateService implements ITemplateService {
       }
 
       const fields = requestBody(body);
-      const patch = assertAndClampContent(parseTemplateContent(fields.content));
       const currentContent = JSON.parse(JSON.stringify(existing.content || {})) as ITemplateContent;
+      const patch = assertAndClampContent(parseTemplateContent(fields.content), currentContent);
       const content: ITemplateContent = { ...currentContent, ...patch };
 
       if (patch.galleryItems) {
@@ -119,8 +123,14 @@ export default class TemplateService implements ITemplateService {
           title: item.title || "",
           address: item.address || "",
           mapsUrl: item.mapsUrl || "",
-          appleMapsUrl: item.appleMapsUrl || "",
         }));
+      }
+
+      if (Array.isArray(patch.enabledSections)) {
+        content.enabledSections = clampEnabledSections(
+          familyFromTemplateSlug(normalized),
+          patch.enabledSections
+        );
       }
 
       const payload: {

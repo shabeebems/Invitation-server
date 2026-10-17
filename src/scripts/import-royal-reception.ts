@@ -3,53 +3,16 @@ import {
   ensureCategory,
   runImport,
   templateRepository,
-  uploadRemoteImage,
 } from "./_shared/seed-template";
-
-/** Free Unsplash photos for the love-story timeline. */
-const STORY_IMAGES = [
-  "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=900&q=80",
-  "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=900&q=80",
-  "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=900&q=80",
-  "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=900&q=80",
-  "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=900&q=80",
-  "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=900&q=80",
-  "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=900&q=80",
-  "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?auto=format&fit=crop&w=900&q=80",
-] as const;
-
-/** Pre-wedding gallery photos (romantic couple / ceremony moments). */
-const GALLERY_IMAGES = [
-  "https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=1100&q=80",
-  "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1100&q=80",
-  "https://images.unsplash.com/photo-1529636798458-92182e662485?auto=format&fit=crop&w=1100&q=80",
-  "https://images.unsplash.com/photo-1606800052052-a08af7148866?auto=format&fit=crop&w=1100&q=80",
-  "https://images.unsplash.com/photo-1591604466107-ec97de577aff?auto=format&fit=crop&w=1100&q=80",
-  "https://images.unsplash.com/photo-1460978812857-470ed1c77af0?auto=format&fit=crop&w=1100&q=80",
-  "https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&w=1100&q=80",
-  "https://images.unsplash.com/photo-1545232979-8bf68ee9b1af?auto=format&fit=crop&w=1100&q=80",
-] as const;
 
 runImport("Royal Reception", async () => {
   const wedding = await ensureCategory("Wedding");
+  const existing = await templateRepository.findBySlug("royal-reception");
+  const existingStory = existing?.content?.loveStoryItems || [];
+  const existingGallery = existing?.content?.galleryItems || [];
 
-  const [hero, groom, bride, ...rest] = await Promise.all([
-    uploadRemoteImage(
-      "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1400&q=85"
-    ),
-    uploadRemoteImage(
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=900&q=80"
-    ),
-    uploadRemoteImage(
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=80"
-    ),
-    ...STORY_IMAGES.map((url) => uploadRemoteImage(url)),
-    ...GALLERY_IMAGES.map((url) => uploadRemoteImage(url)),
-  ]);
-
-  const storyUploads = rest.slice(0, STORY_IMAGES.length);
-  const galleryUploads = rest.slice(STORY_IMAGES.length);
-
+  // Text structure only — photos live in Cloudinary and are managed in the editor.
+  // Re-seeds keep any urls/publicIds already saved in the database.
   const storyMeta = [
     { title: "Hello", date: "March 2019", place: "Family gathering, Kozhikode" },
     { title: "First conversation", date: "April 2019", place: "A quiet evening call" },
@@ -61,14 +24,17 @@ runImport("Royal Reception", async () => {
     { title: "Walima celebration", date: "December 2026", place: "Grand Palace Auditorium" },
   ] as const;
 
-  const loveStoryItems = storyMeta.map((item, index) => ({
-    icon: "",
-    title: item.title,
-    date: item.date,
-    place: item.place,
-    url: storyUploads[index]?.url || "",
-    publicId: storyUploads[index]?.publicId || "",
-  }));
+  const loveStoryItems = storyMeta.map((item, index) => {
+    const prev = existingStory[index];
+    return {
+      icon: "",
+      title: item.title,
+      date: item.date,
+      place: item.place,
+      url: prev?.url || "",
+      publicId: prev?.publicId || "",
+    };
+  });
 
   const galleryMeta = [
     { eyebrow: "Soft light", title: "Pure happiness", caption: "A quiet glance before forever" },
@@ -81,13 +47,16 @@ runImport("Royal Reception", async () => {
     { eyebrow: "Blessing", title: "Alhamdulillah", caption: "Grateful for every step" },
   ] as const;
 
-  const galleryItems = galleryMeta.map((item, index) => ({
-    eyebrow: item.eyebrow,
-    title: item.title,
-    caption: item.caption,
-    url: galleryUploads[index]?.url || "",
-    publicId: galleryUploads[index]?.publicId || "",
-  }));
+  const galleryItems = galleryMeta.map((item, index) => {
+    const prev = existingGallery[index];
+    return {
+      eyebrow: item.eyebrow,
+      title: item.title,
+      caption: item.caption,
+      url: prev?.url || "",
+      publicId: prev?.publicId || "",
+    };
+  });
 
   const template = await templateRepository.upsertBySlug({
     slug: "royal-reception",
@@ -96,11 +65,6 @@ runImport("Royal Reception", async () => {
       "Dark maroon invitation with gold script, couple portraits, love journey, and a choosable pre-wedding gallery.",
     categoryId: wedding._id,
     isActive: true,
-    images: [
-      { slot: "hero", url: hero.url, publicId: hero.publicId },
-      { slot: "groom", url: groom.url, publicId: groom.publicId },
-      { slot: "bride", url: bride.url, publicId: bride.publicId },
-    ],
     content: {
       bismillah: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
       hostLabel: "With the blessings of Allah, the family of",
@@ -131,6 +95,15 @@ runImport("Royal Reception", async () => {
       countdownLiveLabel: "Alhamdulillah — we're married!",
       countdownLayout: "classic",
       ambianceEffect: "petals",
+      enabledSections: [
+        "hero",
+        "countdown",
+        "couple",
+        "story",
+        "gallery",
+        "location",
+        "footer",
+      ],
       meetCoupleTitle: "Meet the Couple",
       meetCoupleIntro: "Two hearts, one journey — a few words about the bride and groom.",
       meetCoupleLayout: "classic",
@@ -157,14 +130,12 @@ runImport("Royal Reception", async () => {
       destinationLabel: "Destination",
       googleMapsUrl:
         "https://www.google.com/maps/search/?api=1&query=Grand%20Palace%20Auditorium%20Kozhikode",
-      appleMapsUrl: "https://maps.apple.com/?q=Grand%20Palace%20Auditorium%20Kozhikode",
       locationItems: [
         {
           label: "Nikah",
           title: "Grand Palace — Main Hall",
           address: "Grand Palace, Kozhikode, Kerala",
           mapsUrl: "https://www.google.com/maps/search/?api=1&query=Grand%20Palace%20Kozhikode",
-          appleMapsUrl: "https://maps.apple.com/?q=Grand%20Palace%20Kozhikode",
         },
         {
           label: "Reception",
@@ -172,14 +143,12 @@ runImport("Royal Reception", async () => {
           address: "Grand Palace Auditorium, Kozhikode, Kerala",
           mapsUrl:
             "https://www.google.com/maps/search/?api=1&query=Grand%20Palace%20Auditorium%20Kozhikode",
-          appleMapsUrl: "https://maps.apple.com/?q=Grand%20Palace%20Auditorium%20Kozhikode",
         },
         {
           label: "Walima",
           title: "Grand Palace — Banquet Lawn",
           address: "Grand Palace Grounds, Kozhikode, Kerala",
           mapsUrl: "https://www.google.com/maps/search/?api=1&query=Grand%20Palace%20Kozhikode%20Kerala",
-          appleMapsUrl: "https://maps.apple.com/?q=Grand%20Palace%20Kozhikode%20Kerala",
         },
       ],
       shareText:
@@ -192,6 +161,6 @@ runImport("Royal Reception", async () => {
   console.log(`Template ready: ${template.slug} -> category ${wedding.name}`);
   console.log(`RED_VELVET_THEME_ID=${redVelvet._id}`);
   console.log(`EMERALD_GROVE_THEME_ID=${emerald._id}`);
-  console.log(`Love story chapters seeded: ${loveStoryItems.length}`);
-  console.log(`Gallery photos seeded: ${galleryItems.length} (layout: masonry)`);
+  console.log(`Love story chapters: ${loveStoryItems.length} (media from DB/editor)`);
+  console.log(`Gallery slots: ${galleryItems.length} (media from DB/editor)`);
 });

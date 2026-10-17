@@ -1,6 +1,6 @@
 /**
  * Deletes removed templates from MongoDB + managed Cloudinary assets.
- * Kept templates: celestial-starlight, parambil-house, royal-reception
+ * Kept templates: parambil-house, royal-reception
  *
  * Run: npm run cleanup:templates
  */
@@ -14,6 +14,7 @@ import { WorkModel } from "../models/work.model";
 import mongoose from "mongoose";
 
 const REMOVE_SLUGS = [
+  "celestial-starlight",
   "crimson-scroll",
   "botanical-orangery",
   "cinematic-vows",
@@ -22,12 +23,15 @@ const REMOVE_SLUGS = [
   "burgundy-bloom",
 ];
 
-const KEEP_SLUGS = new Set(["celestial-starlight", "parambil-house", "royal-reception"]);
+const KEEP_SLUGS = new Set(["parambil-house", "royal-reception"]);
 
 async function collectPublicIds(
   docs: Array<{
     images?: Array<{ publicId?: string }>;
-    content?: { galleryItems?: Array<{ publicId?: string }> };
+    content?: {
+      galleryItems?: Array<{ publicId?: string }>;
+      loveStoryItems?: Array<{ publicId?: string }>;
+    };
   }>
 ) {
   const ids = new Set<string>();
@@ -39,6 +43,11 @@ async function collectPublicIds(
       }
     }
     for (const item of doc.content?.galleryItems || []) {
+      if (item.publicId) {
+        ids.add(item.publicId);
+      }
+    }
+    for (const item of doc.content?.loveStoryItems || []) {
       if (item.publicId) {
         ids.add(item.publicId);
       }
