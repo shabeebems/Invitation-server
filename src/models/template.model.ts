@@ -118,6 +118,19 @@ export interface ITemplateContent {
   loveStoryLayout: string;
   loveStoryItems: ILoveStoryItem[];
   locationItems: ILocationItem[];
+  /** Venue amenity rows (Velvet Heritage and similar). */
+  amenityOneLabel: string;
+  amenityOneDetail: string;
+  amenityTwoLabel: string;
+  amenityTwoDetail: string;
+  amenityThreeLabel: string;
+  amenityThreeDetail: string;
+  /** Footer layout id (e.g. Velvet Heritage signature). */
+  footerLayout: string;
+  /** Story section layout (e.g. Botanical Script arch narrative). */
+  storyLayout: string;
+  /** Quote banner layout. */
+  quoteLayout: string;
   /** Which template sections render (ids from template-sections catalog). */
   enabledSections: string[];
 }
@@ -176,6 +189,15 @@ export const WEDDING_ONLY_CONTENT_KEYS: TemplateContentTextKey[] = [
   "galleryIntro",
   "galleryLayout",
   "viewPhotoLabel",
+  "amenityOneLabel",
+  "amenityOneDetail",
+  "amenityTwoLabel",
+  "amenityTwoDetail",
+  "amenityThreeLabel",
+  "amenityThreeDetail",
+  "footerLayout",
+  "storyLayout",
+  "quoteLayout",
 ];
 
 export const HOUSEWARMING_ONLY_CONTENT_KEYS: TemplateContentTextKey[] = [
@@ -227,6 +249,8 @@ export const WEDDING_SHARED_FROM_HOUSE: TemplateContentTextKey[] = [
   "countdownHeading",
   "countdownLiveLabel",
   "countdownLayout",
+  "heroLayout",
+  "programLayout",
   "programEyebrow",
   "programTitle",
   "programIntro",
@@ -240,6 +264,7 @@ export const WEDDING_SHARED_FROM_HOUSE: TemplateContentTextKey[] = [
   "googleMapsUrl",
   "copyAddressLabel",
   "addToCalendarLabel",
+  "getDirectionsLabel",
   "calendarModalTitle",
   "calendarModalDesc",
   "googleCalendarLabel",

@@ -98,6 +98,15 @@ export const CONTENT_FIELD_MAX: Partial<Record<TemplateContentTextKey, number>> 
   brideDetail: 120,
   loveStoryTitle: 80,
   loveStoryLayout: 32,
+  amenityOneLabel: 40,
+  amenityOneDetail: 80,
+  amenityTwoLabel: 40,
+  amenityTwoDetail: 80,
+  amenityThreeLabel: 40,
+  amenityThreeDetail: 80,
+  footerLayout: 32,
+  storyLayout: 32,
+  quoteLayout: 32,
 };
 
 export const PROGRAM_ITEM_MAX = {
