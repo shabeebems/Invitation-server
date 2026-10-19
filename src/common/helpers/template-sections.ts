@@ -1,4 +1,12 @@
-export type TemplateSectionFamily = "royal" | "house" | "velvet" | "palace" | "botanical";
+export type TemplateSectionFamily =
+  | "royal"
+  | "house"
+  | "velvet"
+  | "palace"
+  | "botanical"
+  | "ruby"
+  | "aurelia"
+  | "cream";
 
 export type SectionDef = {
   id: string;
@@ -54,12 +62,55 @@ export const BOTANICAL_SECTIONS: SectionDef[] = [
   { id: "footer", label: "Footer" },
 ];
 
+export const RUBY_SECTIONS: SectionDef[] = [
+  { id: "hero", label: "Hero", required: true },
+  { id: "blessings", label: "Blessings" },
+  { id: "countdown", label: "Countdown" },
+  { id: "events", label: "Celebrations" },
+  { id: "location", label: "Venue" },
+  { id: "rsvp", label: "RSVP" },
+  { id: "footer", label: "Footer" },
+];
+
+export const AURELIA_SECTIONS: SectionDef[] = [
+  { id: "hero", label: "Hero", required: true },
+  { id: "couple", label: "The Couple" },
+  { id: "gallery", label: "Story Frames" },
+  { id: "story", label: "Journey" },
+  { id: "events", label: "Celebration" },
+  { id: "location", label: "Venue" },
+  { id: "countdown", label: "Countdown" },
+  { id: "dress", label: "Dress Code" },
+  { id: "rsvp", label: "RSVP" },
+  { id: "final", label: "Closing" },
+  { id: "footer", label: "Footer" },
+];
+
+export const CREAM_SECTIONS: SectionDef[] = [
+  { id: "hero", label: "Hero", required: true },
+  { id: "welcome", label: "Welcome" },
+  { id: "couple", label: "The Couple" },
+  { id: "story", label: "Our Story" },
+  { id: "gallery", label: "Gallery" },
+  { id: "events", label: "Events" },
+  { id: "location", label: "Venue" },
+  { id: "countdown", label: "Countdown" },
+  { id: "dress", label: "Dress & Travel" },
+  { id: "faq", label: "FAQ" },
+  { id: "rsvp", label: "RSVP" },
+  { id: "final", label: "Closing" },
+  { id: "footer", label: "Footer" },
+];
+
 export const SECTION_CATALOGS: Record<TemplateSectionFamily, SectionDef[]> = {
   royal: ROYAL_SECTIONS,
   house: HOUSE_SECTIONS,
   velvet: VELVET_SECTIONS,
   palace: PALACE_SECTIONS,
   botanical: BOTANICAL_SECTIONS,
+  ruby: RUBY_SECTIONS,
+  aurelia: AURELIA_SECTIONS,
+  cream: CREAM_SECTIONS,
 };
 
 export function sectionsForFamily(family: TemplateSectionFamily): SectionDef[] {
@@ -97,6 +148,9 @@ export function familyFromTemplateSlug(slug: string): TemplateSectionFamily {
   if (/velvet-heritage|velvet/i.test(value)) return "velvet";
   if (/palace-parchment|palace/i.test(value)) return "palace";
   if (/botanical-script|botanical/i.test(value)) return "botanical";
+  if (/royal-ruby|ruby/i.test(value)) return "ruby";
+  if (/aurelia-nocturne|aurelia/i.test(value)) return "aurelia";
+  if (/cream-editorial|cream/i.test(value)) return "cream";
   return "royal";
 }
 

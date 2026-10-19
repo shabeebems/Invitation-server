@@ -142,7 +142,7 @@ export const LOCATION_ITEM_MAX = {
 export const MAX_PROGRAM_ITEMS = 16;
 export const MAX_GALLERY_ITEMS = 20;
 export const MAX_LOVE_STORY_ITEMS = 15;
-export const MAX_LOCATION_ITEMS = 5;
+export const MAX_LOCATION_ITEMS = 8;
 
 export function maxForContentField(key: string): number {
   return CONTENT_FIELD_MAX[key as TemplateContentTextKey] ?? DEFAULT_CONTENT_MAX;
