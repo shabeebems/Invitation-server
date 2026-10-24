@@ -55,6 +55,7 @@ export function serializeInvitationContent(
             time: item.time || "",
             title: item.title || "",
             description: item.description || "",
+            ...(typeof item.mapsUrl === "string" ? { mapsUrl: item.mapsUrl } : {}),
           })),
         }
       : {}),

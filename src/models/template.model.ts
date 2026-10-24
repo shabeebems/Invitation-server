@@ -5,6 +5,7 @@ export interface IProgramItem {
   time: string;
   title: string;
   description: string;
+  mapsUrl?: string;
 }
 
 export interface IGalleryItem {
@@ -78,6 +79,7 @@ export interface ITemplateContent {
   galleryEyebrow: string;
   galleryTitle: string;
   galleryIntro: string;
+  galleryCtaLabel: string;
   galleryLayout: string;
   galleryItems: IGalleryItem[];
   viewPhotoLabel: string;
@@ -102,6 +104,9 @@ export interface ITemplateContent {
   googleCalendarLabel: string;
   icsCalendarLabel: string;
   dressCode: string;
+  /** Comma-separated "#hex|Name" dress code colours (empty = theme colours). */
+  dressColors: string;
+  dressPaletteLabel: string;
   rsvpNote: string;
   storyTitle: string;
   storyText: string;
@@ -116,6 +121,7 @@ export interface ITemplateContent {
   brideDetail: string;
   loveStoryTitle: string;
   loveStoryIntro: string;
+  countdownSubtitle: string;
   loveStoryLayout: string;
   loveStoryItems: ILoveStoryItem[];
   locationItems: ILocationItem[];
@@ -173,6 +179,8 @@ export const WEDDING_ONLY_CONTENT_KEYS: TemplateContentTextKey[] = [
   "storyTitle",
   "storyText",
   "dressCode",
+  "dressColors",
+  "dressPaletteLabel",
   "rsvpNote",
   "meetCoupleTitle",
   "meetCoupleIntro",
@@ -185,10 +193,12 @@ export const WEDDING_ONLY_CONTENT_KEYS: TemplateContentTextKey[] = [
   "brideDetail",
   "loveStoryTitle",
   "loveStoryIntro",
+  "countdownSubtitle",
   "loveStoryLayout",
   "galleryEyebrow",
   "galleryTitle",
   "galleryIntro",
+  "galleryCtaLabel",
   "galleryLayout",
   "viewPhotoLabel",
   "amenityOneLabel",
@@ -404,6 +414,7 @@ const programItemSchema = new Schema<IProgramItem>(
     time: { type: String, default: "" },
     title: { type: String, default: "" },
     description: { type: String, default: "" },
+    mapsUrl: { type: String },
   },
   { _id: false }
 );

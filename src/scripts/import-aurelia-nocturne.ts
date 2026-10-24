@@ -1,3 +1,5 @@
+import { ThemeModel } from "../models/theme.model";
+import { WorkModel } from "../models/work.model";
 import {
   attachThemes,
   ensureCategory,
@@ -12,17 +14,20 @@ runImport("Aurelia Nocturne", async () => {
   const existingGallery = existing?.content?.galleryItems || [];
   const existingProgram = existing?.content?.programItems || [];
 
+  const venueMapsUrl = "https://www.google.com/maps/search/?api=1&query=Villa+Aurelia+Lake+Como+Italy";
   const programMeta = [
     {
       title: "The Ceremony",
       time: "4:30 PM",
       description:
         "Vows beneath the cypress terrace, as the afternoon light softens over the lake.",
+      mapsUrl: venueMapsUrl,
     },
     {
       title: "The Reception",
       time: "6:30 PM",
       description: "Dinner, drinks and dancing beneath the stars in the villa gardens.",
+      mapsUrl: venueMapsUrl,
     },
   ] as const;
 
@@ -32,6 +37,7 @@ runImport("Aurelia Nocturne", async () => {
       title: prev?.title || item.title,
       time: prev?.time || item.time,
       description: prev?.description || item.description,
+      mapsUrl: prev?.mapsUrl ?? item.mapsUrl,
     };
   });
 
@@ -39,26 +45,22 @@ runImport("Aurelia Nocturne", async () => {
     {
       date: "2019",
       title: "First Met",
-      place:
-        "A delayed train in Milan, a shared umbrella, and a conversation that outlasted the rain.",
+      place: "A delayed train in Milan, a shared umbrella and a talk that outlasted the rain.",
     },
     {
       date: "2021",
       title: "First Adventure",
-      place:
-        "A borrowed car, a coastline road with no plan, and the discovery that getting lost together was the point.",
+      place: "A borrowed car, a coast road with no plan. Getting lost together was perfect.",
     },
     {
       date: "2024",
       title: "The Proposal",
-      place:
-        "At dawn on the water's edge, with the first light on the hills. She said yes before he finished the question.",
+      place: "At dawn on the water's edge, with the first light on the hills. She said yes!",
     },
     {
       date: "2027",
       title: "The Wedding",
-      place:
-        "Surrounded by the people we love, on the shore where we promised to begin again.",
+      place: "A new chapter, same team. More love, more laughter, more adventures.",
     },
   ] as const;
 
@@ -97,7 +99,7 @@ runImport("Aurelia Nocturne", async () => {
     slug: "aurelia-nocturne",
     name: "Aurelia Nocturne",
     description:
-      "Cinematic midnight navy and champagne wedding with seal gate, landscape hero, staggered couple portraits, horizontal story frames, journey timeline, ivory event cards, stylized venue map, countdown, dress palette, and formal RSVP.",
+      "Cinematic midnight navy and champagne wedding with seal gate, landscape hero, staggered couple portraits, horizontal story frames, journey timeline, ivory venue cards, countdown, and editable dress code palette.",
     categoryId: wedding._id,
     isActive: true,
     content: {
@@ -119,8 +121,6 @@ runImport("Aurelia Nocturne", async () => {
       mapsUrl: "https://www.google.com/maps/search/?api=1&query=Lake+Como+Italy",
       googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Lake+Como+Italy",
       getDirectionsLabel: "View location",
-      locationTitle: "The venue",
-      locationLayout: "stylized-map",
       meetCoupleTitle: "The couple",
       storyTitle: "Two stories. One beautiful beginning.",
       meetCoupleLayout: "staggered-duo",
@@ -130,6 +130,7 @@ runImport("Aurelia Nocturne", async () => {
         "A cellist from Edinburgh with a quiet laugh, a terrible sense of direction, and a gift for finding the long way home.",
       galleryEyebrow: "Our story in frames",
       galleryTitle: "A quiet kind of magic",
+      galleryIntro: "Some moments don't need words, they just need to be felt.",
       galleryLayout: "horizontal-rail",
       galleryItems,
       loveStoryTitle: "The journey",
@@ -137,8 +138,9 @@ runImport("Aurelia Nocturne", async () => {
       loveStoryLayout: "journey-timeline",
       loveStoryItems,
       programTitle: "The celebration",
-      programLayout: "ivory-cards",
+      programIntro: "Two moments. One unforgettable day.",
       programItems,
+      locationLayout: "ivory-cards",
       amenityThreeLabel: "The countdown",
       countdownHeading: "Until we say I do",
       countdownLiveLabel: "We're married!",
@@ -147,12 +149,8 @@ runImport("Aurelia Nocturne", async () => {
       dressCode: "Black Tie",
       storyText:
         "Formal evening attire. Soft midnight, ivory and muted rose tones are most welcome.",
-      storyLayout: "palette-swatches",
-      rsvpNote: "Kindly reply by 1 May 2027",
-      locationEyebrow: "We would love",
-      destinationLabel: "to celebrate with you",
-      openHint: "Send reply",
-      quoteLayout: "formal-form",
+      storyLayout: "ringed-swatches",
+      dressPaletteLabel: "Choose your colour",
       closingBlessing: "And so,\nour next chapter begins.",
       closingPresence: "Thank you for being part of our story.",
       replayLabel: "Return to the beginning",
@@ -166,11 +164,9 @@ runImport("Aurelia Nocturne", async () => {
         "couple",
         "gallery",
         "story",
-        "events",
-        "location",
+        "venue",
         "countdown",
         "dress",
-        "rsvp",
         "final",
         "footer",
       ],
@@ -179,14 +175,30 @@ runImport("Aurelia Nocturne", async () => {
     },
   });
 
-  const [nocturne, ivory] = await attachThemes(
-    template,
-    ["Aurelia Nocturne", "Champagne Ivory"],
-    0
-  );
+  const keepTitles = ["Aurelia Nocturne", "Emerald Noir", "Blush Daybreak"];
+  const [nocturne, emerald, blush] = await attachThemes(template, keepTitles, 0);
+  const removedThemes = await ThemeModel.deleteMany({
+    templateId: template._id,
+    title: { $nin: keepTitles },
+  });
+
+  const keepIds = [nocturne, emerald, blush].filter(Boolean).map((theme) => theme._id);
+  if (nocturne) {
+    const reassigned = await WorkModel.updateMany(
+      { templateId: template._id, selectedThemeId: { $nin: keepIds } },
+      { selectedThemeId: nocturne._id }
+    );
+    if (reassigned.modifiedCount) {
+      console.log(`Moved ${reassigned.modifiedCount} work(s) to Aurelia Nocturne theme`);
+    }
+  }
 
   console.log(`Template ready: ${template.slug} -> category ${wedding.name}`);
   console.log(`AURELIA_NOCTURNE_THEME_ID=${nocturne._id}`);
-  console.log(`CHAMPAGNE_IVORY_THEME_ID=${ivory._id}`);
-  console.log(`Milestones: ${loveStoryItems.length}; frames: ${galleryItems.length}; events: ${programItems.length}`);
+  console.log(`EMERALD_NOIR_THEME_ID=${emerald._id}`);
+  console.log(`BLUSH_DAYBREAK_THEME_ID=${blush._id}`);
+  if (removedThemes.deletedCount) {
+    console.log(`Removed extra themes: ${removedThemes.deletedCount}`);
+  }
+  console.log(`Milestones: ${loveStoryItems.length}; frames: ${galleryItems.length}; venue events: ${programItems.length}`);
 });

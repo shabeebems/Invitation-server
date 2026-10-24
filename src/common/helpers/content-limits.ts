@@ -50,6 +50,7 @@ export const CONTENT_FIELD_MAX: Partial<Record<TemplateContentTextKey, number>> 
   eventDateIso: 48,
   eventEndIso: 48,
   countdownHeading: 80,
+  countdownSubtitle: 80,
   countdownLiveLabel: 80,
   countdownLayout: 32,
   heroLayout: 32,
@@ -61,6 +62,7 @@ export const CONTENT_FIELD_MAX: Partial<Record<TemplateContentTextKey, number>> 
   galleryEyebrow: 40,
   galleryTitle: 80,
   galleryIntro: 280,
+  galleryCtaLabel: 40,
   galleryLayout: 32,
   viewPhotoLabel: 40,
   locationEyebrow: 40,
@@ -84,6 +86,8 @@ export const CONTENT_FIELD_MAX: Partial<Record<TemplateContentTextKey, number>> 
   googleCalendarLabel: 40,
   icsCalendarLabel: 40,
   dressCode: 80,
+  dressColors: 320,
+  dressPaletteLabel: 40,
   rsvpNote: 200,
   storyTitle: 80,
   storyText: 600,
@@ -114,6 +118,7 @@ export const PROGRAM_ITEM_MAX = {
   time: 40,
   title: 80,
   description: 280,
+  mapsUrl: 500,
 } as const;
 
 export const GALLERY_ITEM_MAX = {
@@ -185,6 +190,9 @@ export function findContentLimitViolations(content: Partial<ITemplateContent>): 
         item.description.length,
         PROGRAM_ITEM_MAX.description
       );
+      if (item.mapsUrl) {
+        pushViolation(violations, `programItems[${index}].mapsUrl`, item.mapsUrl.length, PROGRAM_ITEM_MAX.mapsUrl);
+      }
     });
   }
 
@@ -245,6 +253,9 @@ export function clampTemplateContent(content: Partial<ITemplateContent>): Partia
         time: clampText(item.time || "", PROGRAM_ITEM_MAX.time),
         title: clampText(item.title || "", PROGRAM_ITEM_MAX.title),
         description: clampText(item.description || "", PROGRAM_ITEM_MAX.description),
+        ...(typeof item.mapsUrl === "string"
+          ? { mapsUrl: clampText(item.mapsUrl, PROGRAM_ITEM_MAX.mapsUrl) }
+          : {}),
       })
     );
   }

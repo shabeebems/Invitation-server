@@ -38,6 +38,7 @@ export function parseTemplateContent(raw: unknown): Partial<ITemplateContent> {
         time: typeof row.time === "string" ? row.time : "",
         title: typeof row.title === "string" ? row.title : "",
         description: typeof row.description === "string" ? row.description : "",
+        ...(typeof row.mapsUrl === "string" ? { mapsUrl: row.mapsUrl } : {}),
       } satisfies IProgramItem;
     });
   }

@@ -64,11 +64,12 @@ export const BOTANICAL_SECTIONS: SectionDef[] = [
 
 export const RUBY_SECTIONS: SectionDef[] = [
   { id: "hero", label: "Hero", required: true },
-  { id: "blessings", label: "Blessings" },
+  { id: "story", label: "Our Story" },
   { id: "countdown", label: "Countdown" },
+  { id: "blessings", label: "Blessings" },
   { id: "events", label: "Celebrations" },
   { id: "location", label: "Venue" },
-  { id: "rsvp", label: "RSVP" },
+  { id: "gallery", label: "Gallery" },
   { id: "footer", label: "Footer" },
 ];
 
@@ -77,11 +78,9 @@ export const AURELIA_SECTIONS: SectionDef[] = [
   { id: "couple", label: "The Couple" },
   { id: "gallery", label: "Story Frames" },
   { id: "story", label: "Journey" },
-  { id: "events", label: "Celebration" },
-  { id: "location", label: "Venue" },
+  { id: "venue", label: "Venue" },
   { id: "countdown", label: "Countdown" },
   { id: "dress", label: "Dress Code" },
-  { id: "rsvp", label: "RSVP" },
   { id: "final", label: "Closing" },
   { id: "footer", label: "Footer" },
 ];
@@ -133,7 +132,13 @@ export function resolveEnabledSections(
   }
 
   const remapped =
-    family === "botanical" ? saved.map((id) => (id === "travel" ? "location" : id)) : saved;
+    family === "botanical"
+      ? saved.map((id) => (id === "travel" ? "location" : id))
+      : family === "ruby"
+        ? saved.map((id) => (id === "rsvp" ? "gallery" : id))
+        : family === "aurelia"
+          ? saved.map((id) => (id === "events" ? "venue" : id))
+          : saved;
   const enabled = new Set(remapped.filter((id) => allowed.has(id)));
   for (const section of catalog) {
     if (section.required) {
