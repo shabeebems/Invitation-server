@@ -74,7 +74,7 @@ runImport("Velvet Heritage", async () => {
     slug: "velvet-heritage",
     name: "Velvet Heritage",
     description:
-      "Cinematic burgundy velvet invitation with ivory panels, gold botanical accents, envelope opening, arch hero, scallop countdown, mosaic gallery, and relationship timeline.",
+      "Cinematic burgundy velvet invitation with ivory panels, gold botanical accents, envelope opening, arch hero, countdown layouts, gallery layouts, and relationship timeline.",
     categoryId: wedding._id,
     isActive: true,
     content: {
@@ -113,7 +113,7 @@ runImport("Velvet Heritage", async () => {
       eventDateIso: "2027-02-20T11:00:00+05:30",
       countdownHeading: "The big day is coming",
       countdownLiveLabel: "We're married!",
-      countdownLayout: "scallop",
+      countdownLayout: "gilded-rings",
       heroLayout: "arch",
       ambianceEffect: "petals",
       enabledSections: ["hero", "countdown", "gallery", "story", "location", "footer"],

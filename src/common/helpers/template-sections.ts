@@ -58,7 +58,7 @@ export const BOTANICAL_SECTIONS: SectionDef[] = [
   { id: "gallery", label: "Gallery" },
   { id: "itinerary", label: "Itinerary" },
   { id: "family", label: "Family" },
-  { id: "travel", label: "Travel & RSVP" },
+  { id: "location", label: "Location" },
   { id: "footer", label: "Footer" },
 ];
 
@@ -132,7 +132,9 @@ export function resolveEnabledSections(
     return defaultEnabledSections(family);
   }
 
-  const enabled = new Set(saved.filter((id) => allowed.has(id)));
+  const remapped =
+    family === "botanical" ? saved.map((id) => (id === "travel" ? "location" : id)) : saved;
+  const enabled = new Set(remapped.filter((id) => allowed.has(id)));
   for (const section of catalog) {
     if (section.required) {
       enabled.add(section.id);

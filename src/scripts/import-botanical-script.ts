@@ -1,3 +1,5 @@
+import { ThemeModel } from "../models/theme.model";
+import { WorkModel } from "../models/work.model";
 import {
   attachThemes,
   ensureCategory,
@@ -73,7 +75,7 @@ runImport("Botanical Script", async () => {
   });
 
   const galleryMeta = [
-    { eyebrow: "Tradition", title: "Diya Glow", caption: "Brass lamp and marigolds" },
+    { eyebrow: "Wedding Ceremony", title: "Diya Glow", caption: "Brass lamp and marigolds" },
     { eyebrow: "Mehendi", title: "Henna Hands", caption: "Bridal mehndi details" },
     { eyebrow: "Ceremony", title: "Sacred Mandap", caption: "Floral mandap stage" },
     { eyebrow: "Couple", title: "Garden Walk", caption: "Hand in hand" },
@@ -97,7 +99,7 @@ runImport("Botanical Script", async () => {
     slug: "botanical-script",
     name: "Botanical Script",
     description:
-      "Elegant parchment wedding with Great Vibes calligraphy, botanical side sprigs, arch hero, story narrative, event trio, burgundy quote banner, five-column mosaic gallery, weekend itinerary, family party row, and travel RSVP.",
+      "Elegant parchment wedding with Great Vibes calligraphy, botanical side sprigs, arch hero, story narrative, event trio, burgundy quote banner, five-column mosaic gallery, weekend itinerary, family party row, and location map.",
     categoryId: wedding._id,
     isActive: true,
     content: {
@@ -108,7 +110,6 @@ runImport("Botanical Script", async () => {
       groomLabel: "The Groom",
       brideLabel: "The Bride",
       introLine: "Together is our favourite place to be.\nJoin us as we begin our forever.",
-      openHint: "RSVP",
       inviteLine: "Wedding",
       weekday: "Saturday",
       day: "22",
@@ -117,18 +118,16 @@ runImport("Botanical Script", async () => {
       venueLabel: "Dress Code",
       venueName: "The Royal Garden",
       venueCity: "Udayapuram, Rajasthan",
+      venueHall: "Garden Pavilion & guest cottages on the estate",
       dressCode: "Traditional / Festive",
-      addressFull:
-        "If you wish to bless us with a gift, we have created a registry for your convenience.",
       mapsUrl: "https://maps.google.com/?q=The+Royal+Garden+Udayapuram",
       googleMapsUrl: "https://maps.google.com/?q=The+Royal+Garden+Udayapuram",
-      getDirectionsLabel: "Send RSVP",
-      copyAddressLabel: "View Registry",
-      destinationLabel: "Your presence is the greatest gift!",
-      locationTitle: "Travel & Accommodation",
-      locationIntro: "We'd love to know if you can join us for our special day!",
-      locationLayout: "map-rsvp",
-      rsvpNote: "Kindly RSVP",
+      locationEyebrow: "The Venue",
+      locationTitle: "Location",
+      locationIntro: "Find us at The Royal Garden",
+      addressFull: "Lake Road, The Royal Garden\nUdayapuram, Rajasthan 313001",
+      getDirectionsLabel: "Get Directions",
+      locationLayout: "map-only",
       meetCoupleTitle: "A Little About Us",
       storyTitle: "Two Hearts, One Journey",
       storyText:
@@ -144,8 +143,9 @@ runImport("Botanical Script", async () => {
       amenityTwoLabel: "Our Parents",
       amenityTwoDetail: "Our biggest supporters",
       amenityThreeLabel: "With love",
-      amenityThreeDetail: "",
+      amenityThreeDetail: "With love, we are better together",
       programEyebrow: "Wedding Events",
+      programIntro: "Three beautiful moments, one big celebration",
       programLayout: "trio-cards",
       programItems,
       blessing:
@@ -153,10 +153,11 @@ runImport("Botanical Script", async () => {
       quoteLayout: "burgundy-banner",
       galleryEyebrow: "Our Gallery",
       galleryTitle: "Our Gallery",
-      galleryIntro: "",
+      galleryIntro: "Moments of love, tradition and togetherness",
       galleryLayout: "mosaic-five",
       galleryItems,
       loveStoryTitle: "Weekend Itinerary",
+      loveStoryIntro: "Three days of love, joy and togetherness",
       loveStoryLayout: "rail-three",
       loveStoryItems,
       heroLayout: "split-cta",
@@ -170,7 +171,7 @@ runImport("Botanical Script", async () => {
         "gallery",
         "itinerary",
         "family",
-        "travel",
+        "location",
         "footer",
       ],
       closingPresence: "Thank You",
@@ -182,15 +183,32 @@ runImport("Botanical Script", async () => {
     },
   });
 
-  const [parchment, forest] = await attachThemes(
-    template,
-    ["Botanical Parchment", "Forest Grove"],
-    0
+  const keepTitles = ["Botanical Parchment", "Twilight Fern"] as const;
+  const [parchment, twilight] = await attachThemes(template, [...keepTitles], 0);
+  const removedExtras = await ThemeModel.deleteMany({
+    templateId: template._id,
+    title: { $nin: [...keepTitles] },
+  });
+
+  const keepIds = new Set(
+    [parchment, twilight].filter(Boolean).map((theme) => String(theme._id))
   );
+  if (parchment && twilight) {
+    const works = await WorkModel.find({ templateId: template._id });
+    for (const work of works) {
+      const currentId = work.selectedThemeId ? String(work.selectedThemeId) : "";
+      if (!currentId || !keepIds.has(currentId)) {
+        await WorkModel.findByIdAndUpdate(work._id, { selectedThemeId: parchment._id });
+      }
+    }
+  }
 
   console.log(`Template ready: ${template.slug} -> category ${wedding.name}`);
   console.log(`BOTANICAL_PARCHMENT_THEME_ID=${parchment._id}`);
-  console.log(`FOREST_GROVE_THEME_ID=${forest._id}`);
+  console.log(`TWILIGHT_FERN_THEME_ID=${twilight._id}`);
+  if (removedExtras.deletedCount) {
+    console.log(`Removed extra botanical themes: ${removedExtras.deletedCount}`);
+  }
   console.log(`Program events: ${programItems.length}`);
   console.log(`Itinerary stops: ${loveStoryItems.length}`);
   console.log(`Gallery slots: ${galleryItems.length} (media from DB/editor)`);

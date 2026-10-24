@@ -97,6 +97,7 @@ export const CONTENT_FIELD_MAX: Partial<Record<TemplateContentTextKey, number>> 
   brideBio: 320,
   brideDetail: 120,
   loveStoryTitle: 80,
+  loveStoryIntro: 280,
   loveStoryLayout: 32,
   amenityOneLabel: 40,
   amenityOneDetail: 80,

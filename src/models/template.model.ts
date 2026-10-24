@@ -115,6 +115,7 @@ export interface ITemplateContent {
   brideBio: string;
   brideDetail: string;
   loveStoryTitle: string;
+  loveStoryIntro: string;
   loveStoryLayout: string;
   loveStoryItems: ILoveStoryItem[];
   locationItems: ILocationItem[];
@@ -183,6 +184,7 @@ export const WEDDING_ONLY_CONTENT_KEYS: TemplateContentTextKey[] = [
   "brideBio",
   "brideDetail",
   "loveStoryTitle",
+  "loveStoryIntro",
   "loveStoryLayout",
   "galleryEyebrow",
   "galleryTitle",
