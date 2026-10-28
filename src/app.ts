@@ -3,9 +3,10 @@ import cors from "cors";
 import helmet from "helmet";
 import routes from "./routes";
 import errorHandler from "./middlewares/error.middleware";
+import { allowedClientOrigins } from "./common/http/client-origins";
 
 const app = express();
-const clientOrigin = process.env.CLIENT_ORIGIN;
+const allowedOrigins = allowedClientOrigins();
 
 app.use(
   helmet({
@@ -16,7 +17,13 @@ app.use(
 );
 app.use(
   cors({
-    origin: clientOrigin,
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(null, false);
+    },
     credentials: true,
   })
 );

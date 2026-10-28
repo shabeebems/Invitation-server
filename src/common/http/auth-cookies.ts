@@ -6,10 +6,12 @@ const ACCESS_MAX_AGE = 15 * 60 * 1000;
 const REFRESH_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 
 function baseOptions(maxAge?: number) {
+  const isProd = process.env.NODE_ENV === "production";
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax" as const,
+    // Cross-site frontends (e.g. *.vercel.app -> api.savethekath.com) need None+Secure.
+    secure: isProd,
+    sameSite: (isProd ? "none" : "lax") as "none" | "lax",
     path: "/",
     ...(maxAge === undefined ? {} : { maxAge }),
   };
