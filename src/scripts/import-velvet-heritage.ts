@@ -131,7 +131,7 @@ runImport("Velvet Heritage", async () => {
       closingBlessing:
         "Your presence will make our celebration more special.\nWe look forward to celebrating with you!",
       footerLayout: "signature",
-      footer: "© All rights reserved · Inviteo",
+      footer: "© All rights reserved · Save the Kath",
       shareText:
         "You're invited to the wedding of Arjun & Meera\nSaturday, 20 February 2027 · 11:00 AM\nLakeview Heritage Hall, Kochi, Kerala\n\nWe would be honored to have you with us.",
     },

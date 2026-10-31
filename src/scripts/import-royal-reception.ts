@@ -87,7 +87,7 @@ runImport("Royal Reception", async () => {
       hashtag: "#IbrahimWedsAisha",
       blessing: "May Allah bless this union and fill it with love, mercy and tranquility.",
       inviteLine: "Kindly grace the occasion with your presence and duas",
-      footer: "© All rights reserved · Inviteo",
+      footer: "© All rights reserved · Save the Kath",
       envelopeTagline: "An invitation awaits",
       openHint: "Tap the seal to open",
       eventDateIso: "2026-12-25T11:00:00+05:30",

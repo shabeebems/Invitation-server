@@ -22,7 +22,9 @@ import {
   ITemplateContent,
   compactTemplateContent,
   contentFamilyFromCategory,
+  droppedProgramPhotoIds,
   findTemplateImage,
+  restoreProgramPhotos,
   upsertTemplateImage,
 } from "../../models/template.model";
 import type ITemplateRepository from "../../repositories/interfaces/template-repository.interface";
@@ -96,6 +98,10 @@ export default class TemplateService implements ITemplateService {
             await deleteCloudinaryImage(item.publicId);
           }
         }
+      }
+
+      if (patch.programItems) {
+        content.programItems = restoreProgramPhotos(patch.programItems, currentContent.programItems);
       }
 
       if (patch.loveStoryItems) {
@@ -174,6 +180,18 @@ export default class TemplateService implements ITemplateService {
               await deleteCloudinaryImage(previous.publicId);
             }
           }
+        } else if (slot === "program") {
+          const index = Number(fields.programIndex);
+          const items = [...(content.programItems || [])];
+
+          if (Number.isInteger(index) && index >= 0 && index < items.length) {
+            items[index] = {
+              ...items[index],
+              url: uploaded.url,
+              publicId: uploaded.publicId,
+            };
+            payload.content = { ...content, programItems: items };
+          }
         } else {
           const current = (existing.images || []).map((image) => ({
             slot: image.slot,
@@ -184,6 +202,14 @@ export default class TemplateService implements ITemplateService {
           payload.images = upsertTemplateImage(current, slot, uploaded.url, uploaded.publicId);
           if (previous?.publicId && previous.publicId !== uploaded.publicId) {
             await deleteCloudinaryImage(previous.publicId);
+          }
+        }
+      }
+
+      if (patch.programItems) {
+        for (const id of droppedProgramPhotoIds(payload.content.programItems, currentContent.programItems)) {
+          if (isManagedCloudinaryId(id)) {
+            await deleteCloudinaryImage(id);
           }
         }
       }

@@ -39,6 +39,11 @@ export function parseTemplateContent(raw: unknown): Partial<ITemplateContent> {
         title: typeof row.title === "string" ? row.title : "",
         description: typeof row.description === "string" ? row.description : "",
         ...(typeof row.mapsUrl === "string" ? { mapsUrl: row.mapsUrl } : {}),
+        ...(typeof row.url === "string" && row.url && !row.url.startsWith("blob:")
+          ? { url: row.url, publicId: typeof row.publicId === "string" ? row.publicId : "" }
+          : typeof row.publicId === "string" && row.publicId
+            ? { publicId: row.publicId }
+            : {}),
       } satisfies IProgramItem;
     });
   }

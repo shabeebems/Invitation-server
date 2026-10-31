@@ -6,6 +6,8 @@ export interface IProgramItem {
   title: string;
   description: string;
   mapsUrl?: string;
+  url?: string;
+  publicId?: string;
 }
 
 export interface IGalleryItem {
@@ -107,7 +109,16 @@ export interface ITemplateContent {
   /** Comma-separated "#hex|Name" dress code colours (empty = theme colours). */
   dressColors: string;
   dressPaletteLabel: string;
-  rsvpNote: string;
+  heroScript: string;
+  heroSideNote: string;
+  heroCtaLabel: string;
+  coupleTagline: string;
+  storySideNote: string;
+  storyScriptNote: string;
+  galleryLead: string;
+  galleryScript: string;
+  gallerySideNote: string;
+  eventsLead: string;
   storyTitle: string;
   storyText: string;
   meetCoupleTitle: string;
@@ -181,7 +192,16 @@ export const WEDDING_ONLY_CONTENT_KEYS: TemplateContentTextKey[] = [
   "dressCode",
   "dressColors",
   "dressPaletteLabel",
-  "rsvpNote",
+  "heroScript",
+  "heroSideNote",
+  "heroCtaLabel",
+  "coupleTagline",
+  "storySideNote",
+  "storyScriptNote",
+  "galleryLead",
+  "galleryScript",
+  "gallerySideNote",
+  "eventsLead",
   "meetCoupleTitle",
   "meetCoupleIntro",
   "meetCoupleLayout",
@@ -361,6 +381,29 @@ export interface ITemplateImage {
   publicId: string;
 }
 
+/** Re-attaches stored photos to program items whose url was a pending browser preview. */
+export function restoreProgramPhotos(
+  next: IProgramItem[],
+  previous: IProgramItem[] | undefined
+): IProgramItem[] {
+  return next.map((item) => {
+    if (item.url || !item.publicId) return item;
+    const match = (previous || []).find((prev) => prev.publicId === item.publicId && prev.url);
+    return match ? { ...item, url: match.url } : { ...item, publicId: undefined };
+  });
+}
+
+/** Managed photos that were attached to program items before but are gone now. */
+export function droppedProgramPhotoIds(
+  next: IProgramItem[] | undefined,
+  previous: IProgramItem[] | undefined
+): string[] {
+  const kept = new Set((next || []).map((item) => item.publicId).filter(Boolean));
+  return (previous || [])
+    .map((item) => item.publicId || "")
+    .filter((id) => id && !kept.has(id));
+}
+
 export function findTemplateImage(images: ITemplateImage[] | undefined, slot: string) {
   return images?.find((image) => image.slot === slot);
 }
@@ -415,6 +458,8 @@ const programItemSchema = new Schema<IProgramItem>(
     title: { type: String, default: "" },
     description: { type: String, default: "" },
     mapsUrl: { type: String },
+    url: { type: String },
+    publicId: { type: String },
   },
   { _id: false }
 );

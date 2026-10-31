@@ -38,6 +38,8 @@ export function toWorkJson(work: IWork, themes: ITheme[] = []) {
     name: work.name,
     description: work.description,
     isActive: work.isActive,
+    isPublished: Boolean(work.isPublished),
+    publishedAt: work.publishedAt || null,
     source: "work" as const,
     userId:
       work.userId && typeof work.userId === "object" && "_id" in work.userId

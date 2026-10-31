@@ -2,7 +2,6 @@ export type TemplateSectionFamily =
   | "royal"
   | "house"
   | "velvet"
-  | "palace"
   | "botanical"
   | "ruby"
   | "aurelia"
@@ -33,15 +32,6 @@ export const HOUSE_SECTIONS: SectionDef[] = [
 ];
 
 export const VELVET_SECTIONS: SectionDef[] = [
-  { id: "hero", label: "Hero", required: true },
-  { id: "countdown", label: "Countdown" },
-  { id: "gallery", label: "Gallery" },
-  { id: "story", label: "Timeline" },
-  { id: "location", label: "Venue" },
-  { id: "footer", label: "Footer" },
-];
-
-export const PALACE_SECTIONS: SectionDef[] = [
   { id: "hero", label: "Hero", required: true },
   { id: "countdown", label: "Countdown" },
   { id: "gallery", label: "Gallery" },
@@ -96,7 +86,6 @@ export const CREAM_SECTIONS: SectionDef[] = [
   { id: "countdown", label: "Countdown" },
   { id: "dress", label: "Dress & Travel" },
   { id: "faq", label: "FAQ" },
-  { id: "rsvp", label: "RSVP" },
   { id: "final", label: "Closing" },
   { id: "footer", label: "Footer" },
 ];
@@ -105,7 +94,6 @@ export const SECTION_CATALOGS: Record<TemplateSectionFamily, SectionDef[]> = {
   royal: ROYAL_SECTIONS,
   house: HOUSE_SECTIONS,
   velvet: VELVET_SECTIONS,
-  palace: PALACE_SECTIONS,
   botanical: BOTANICAL_SECTIONS,
   ruby: RUBY_SECTIONS,
   aurelia: AURELIA_SECTIONS,
@@ -153,7 +141,6 @@ export function familyFromTemplateSlug(slug: string): TemplateSectionFamily {
   const value = slug || "";
   if (/parambil-house|house/i.test(value)) return "house";
   if (/velvet-heritage|velvet/i.test(value)) return "velvet";
-  if (/palace-parchment|palace/i.test(value)) return "palace";
   if (/botanical-script|botanical/i.test(value)) return "botanical";
   if (/royal-ruby|ruby/i.test(value)) return "ruby";
   if (/aurelia-nocturne|aurelia/i.test(value)) return "aurelia";

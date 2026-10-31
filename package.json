@@ -9,9 +9,8 @@
     "test": "tsx --test src/**/*.test.ts",
     "start": "node dist/server.js",
     "seed:assets": "tsx src/scripts/upload-site-assets.ts",
-    "seed:templates": "tsx src/scripts/import-royal-reception.ts && tsx src/scripts/import-parambil-house.ts && tsx src/scripts/import-velvet-heritage.ts && tsx src/scripts/import-palace-parchment.ts && tsx src/scripts/import-botanical-script.ts && tsx src/scripts/import-royal-ruby.ts && tsx src/scripts/import-aurelia-nocturne.ts && tsx src/scripts/import-cream-editorial.ts",
+    "seed:templates": "tsx src/scripts/import-royal-reception.ts && tsx src/scripts/import-parambil-house.ts && tsx src/scripts/import-velvet-heritage.ts && tsx src/scripts/import-botanical-script.ts && tsx src/scripts/import-royal-ruby.ts && tsx src/scripts/import-aurelia-nocturne.ts && tsx src/scripts/import-cream-editorial.ts",
     "seed:velvet": "tsx src/scripts/import-velvet-heritage.ts",
-    "seed:palace": "tsx src/scripts/import-palace-parchment.ts",
     "seed:botanical": "tsx src/scripts/import-botanical-script.ts",
     "seed:ruby": "tsx src/scripts/import-royal-ruby.ts",
     "seed:aurelia": "tsx src/scripts/import-aurelia-nocturne.ts",
@@ -22,7 +21,8 @@
     "cleanup:royal-themes": "tsx src/scripts/cleanup-royal-themes.ts",
     "cleanup:royal-content": "tsx src/scripts/cleanup-royal-content.ts",
     "cleanup:royal": "tsx src/scripts/cleanup-royal-themes.ts && tsx src/scripts/cleanup-royal-content.ts",
-    "cleanup:maps-legacy": "tsx src/scripts/cleanup-maps-legacy.ts"
+    "cleanup:maps-legacy": "tsx src/scripts/cleanup-maps-legacy.ts",
+    "cleanup:rebrand": "tsx src/scripts/rebrand-content.ts"
   },
   "keywords": [],
   "author": "",

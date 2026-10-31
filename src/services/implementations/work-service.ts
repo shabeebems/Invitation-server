@@ -28,7 +28,9 @@ import {
   ITemplateContent,
   compactTemplateContent,
   contentFamilyFromCategory,
+  droppedProgramPhotoIds,
   findTemplateImage,
+  restoreProgramPhotos,
   upsertTemplateImage,
 } from "../../models/template.model";
 import { IWork } from "../../models/work.model";
@@ -233,6 +235,10 @@ export default class WorkService implements IWorkService {
         }
       }
 
+      if (patch.programItems) {
+        content.programItems = restoreProgramPhotos(patch.programItems, currentContent.programItems);
+      }
+
       if (patch.loveStoryItems) {
         const previousItems = currentContent.loveStoryItems || [];
         content.loveStoryItems = patch.loveStoryItems.map((item, index) => ({
@@ -312,6 +318,18 @@ export default class WorkService implements IWorkService {
               await this.deleteWorkAsset(previous.publicId);
             }
           }
+        } else if (slot === "program") {
+          const index = Number(fields.programIndex);
+          const items = [...(content.programItems || [])];
+
+          if (Number.isInteger(index) && index >= 0 && index < items.length) {
+            items[index] = {
+              ...items[index],
+              url: uploaded.url,
+              publicId: uploaded.publicId,
+            };
+            payload.content = { ...content, programItems: items };
+          }
         } else {
           const current = (existing.images || []).map((image) => ({
             slot: image.slot,
@@ -323,6 +341,12 @@ export default class WorkService implements IWorkService {
           if (previous?.publicId && previous.publicId !== uploaded.publicId) {
             await this.deleteWorkAsset(previous.publicId);
           }
+        }
+      }
+
+      if (patch.programItems) {
+        for (const id of droppedProgramPhotoIds(payload.content.programItems, currentContent.programItems)) {
+          await this.deleteWorkAsset(id);
         }
       }
 
@@ -447,6 +471,16 @@ export default class WorkService implements IWorkService {
             url: cloned.url,
             publicId: cloned.publicId,
           };
+        })
+      );
+    }
+
+    if (Array.isArray(content.programItems)) {
+      content.programItems = await Promise.all(
+        content.programItems.map(async (item) => {
+          if (!item.url) return item;
+          const cloned = await this.cloneImage(item.url, item.publicId || "");
+          return { ...item, url: cloned.url, publicId: cloned.publicId };
         })
       );
     }
