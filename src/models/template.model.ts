@@ -52,12 +52,16 @@ export interface ITemplateContent {
   venueName: string;
   venueHall: string;
   venueCity: string;
+  /** Host's mobile number collected when a customer starts an invitation. */
+  contactPhone: string;
   mapsUrl: string;
   hashtag: string;
   blessing: string;
   inviteLine: string;
   footer: string;
   shareText: string;
+  /** Owner-edited WhatsApp message; empty means the message is built from the invitation details. */
+  shareMessage: string;
   envelopeTagline: string;
   skipLabel: string;
   openHint: string;
@@ -168,8 +172,10 @@ export const SHARED_CONTENT_KEYS: TemplateContentTextKey[] = [
   "time",
   "venueName",
   "venueCity",
+  "contactPhone",
   "blessing",
   "shareText",
+  "shareMessage",
   "ambianceEffect",
 ];
 
