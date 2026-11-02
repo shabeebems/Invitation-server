@@ -7,44 +7,65 @@ import IPaymentGateway, {
   GatewayOrderResult,
 } from "../interfaces/payment-gateway.interface";
 
+const PLACEHOLDER_KEY_ID = "rzp_test_placeholder";
+const PLACEHOLDER_KEY_SECRET = "rzp_secret_placeholder";
+const PLACEHOLDER_WEBHOOK_SECRET = "rzp_webhook_secret_placeholder";
+
 @injectable()
 export default class RazorpayGateway implements IPaymentGateway {
   private client: Razorpay | null = null;
-  private keyId: string;
-  private keySecret: string;
-  private webhookSecret: string;
-  private isMockMode: boolean;
+  private clientKeyId = "";
 
-  constructor() {
-    this.keyId = process.env.RAZORPAY_KEY_ID || "rzp_test_placeholder";
-    this.keySecret = process.env.RAZORPAY_KEY_SECRET || "rzp_secret_placeholder";
-    this.webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET || "rzp_webhook_secret_placeholder";
+  private config() {
+    const keyId = (process.env.RAZORPAY_KEY_ID || "").trim();
+    const keySecret = (process.env.RAZORPAY_KEY_SECRET || "").trim();
+    const webhookSecret = (process.env.RAZORPAY_WEBHOOK_SECRET || "").trim();
+    const isMockMode =
+      !keyId ||
+      keyId === PLACEHOLDER_KEY_ID ||
+      !keySecret ||
+      keySecret === PLACEHOLDER_KEY_SECRET;
 
-    // Detect placeholder / mock mode
-    this.isMockMode =
-      !this.keyId ||
-      this.keyId === "rzp_test_placeholder" ||
-      !this.keySecret ||
-      this.keySecret === "rzp_secret_placeholder";
+    return {
+      keyId: keyId || PLACEHOLDER_KEY_ID,
+      keySecret: keySecret || PLACEHOLDER_KEY_SECRET,
+      webhookSecret: webhookSecret || PLACEHOLDER_WEBHOOK_SECRET,
+      isMockMode,
+    };
+  }
 
-    if (!this.isMockMode) {
-      this.client = new Razorpay({
-        key_id: this.keyId,
-        key_secret: this.keySecret,
-      });
+  private sdk() {
+    const { keyId, keySecret, isMockMode } = this.config();
+
+    if (isMockMode) {
+      this.client = null;
+      this.clientKeyId = "";
+      return null;
     }
+
+    if (!this.client || this.clientKeyId !== keyId) {
+      this.client = new Razorpay({
+        key_id: keyId,
+        key_secret: keySecret,
+      });
+      this.clientKeyId = keyId;
+    }
+
+    return this.client;
   }
 
   isMock(): boolean {
-    return this.isMockMode;
+    return this.config().isMockMode;
   }
 
   getKeyId(): string {
-    return this.keyId;
+    return this.config().keyId;
   }
 
   async createOrder(input: CreateGatewayOrderInput): Promise<GatewayOrderResult> {
-    if (this.isMockMode || !this.client) {
+    const client = this.sdk();
+
+    if (!client) {
       const mockOrderId = `order_mock_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
       return {
         gatewayOrderId: mockOrderId,
@@ -54,7 +75,7 @@ export default class RazorpayGateway implements IPaymentGateway {
       };
     }
 
-    const order = await this.client.orders.create({
+    const order = await client.orders.create({
       amount: input.amount,
       currency: input.currency,
       receipt: input.receipt,
@@ -70,12 +91,14 @@ export default class RazorpayGateway implements IPaymentGateway {
   }
 
   verifyPaymentSignature(orderId: string, paymentId: string, signature: string): boolean {
-    if (this.isMockMode) {
-      // In mock mode, permit valid mock markers or test signatures
+    const { keySecret, isMockMode } = this.config();
+
+    if (isMockMode) {
       if (
         signature === "mock_signature" ||
         signature.startsWith("mock_") ||
-        paymentId.startsWith("pay_mock_")
+        paymentId.startsWith("pay_mock_") ||
+        orderId.startsWith("order_mock_")
       ) {
         return true;
       }
@@ -83,11 +106,7 @@ export default class RazorpayGateway implements IPaymentGateway {
 
     try {
       const payload = `${orderId}|${paymentId}`;
-      const expected = crypto
-        .createHmac("sha256", this.keySecret)
-        .update(payload)
-        .digest("hex");
-
+      const expected = crypto.createHmac("sha256", keySecret).update(payload).digest("hex");
       const expectedBuffer = Buffer.from(expected, "utf8");
       const signatureBuffer = Buffer.from(signature, "utf8");
 
@@ -102,17 +121,15 @@ export default class RazorpayGateway implements IPaymentGateway {
   }
 
   verifyWebhookSignature(rawBody: string | Buffer, signature: string): boolean {
-    if (this.isMockMode && signature === "mock_webhook_signature") {
+    const { webhookSecret, isMockMode } = this.config();
+
+    if (isMockMode && signature === "mock_webhook_signature") {
       return true;
     }
 
     try {
       const bodyString = typeof rawBody === "string" ? rawBody : rawBody.toString("utf8");
-      const expected = crypto
-        .createHmac("sha256", this.webhookSecret)
-        .update(bodyString)
-        .digest("hex");
-
+      const expected = crypto.createHmac("sha256", webhookSecret).update(bodyString).digest("hex");
       const expectedBuffer = Buffer.from(expected, "utf8");
       const signatureBuffer = Buffer.from(signature, "utf8");
 

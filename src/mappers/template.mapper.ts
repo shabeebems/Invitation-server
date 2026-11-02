@@ -1,4 +1,4 @@
-import { ITemplate } from "../models/template.model";
+import { DEFAULT_ACTUAL_PRICE, DEFAULT_OFFER_PRICE, ITemplate } from "../models/template.model";
 import { ITheme } from "../models/theme.model";
 import { toThemeJson } from "./theme.mapper";
 import {
@@ -17,6 +17,8 @@ export function toTemplateJson(template: ITemplate, themes: ITheme[] = []) {
     name: template.name,
     description: template.description,
     isActive: template.isActive,
+    actualPrice: template.actualPrice ?? DEFAULT_ACTUAL_PRICE,
+    offerPrice: template.offerPrice ?? DEFAULT_OFFER_PRICE,
     source: "template" as const,
     images: (template.images || []).map((image) => ({
       slot: image.slot,

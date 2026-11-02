@@ -4,6 +4,7 @@ import { Types } from "mongoose";
 import { BadRequestError, ForbiddenError, NotFoundError } from "../../common/errors";
 import { guard } from "../../common/helpers/guard";
 import TYPES from "../../constants/types";
+import { DEFAULT_ACTUAL_PRICE, DEFAULT_OFFER_PRICE, ITemplate } from "../../models/template.model";
 import { IOrder } from "../../models/order.model";
 import IOrderRepository from "../../repositories/interfaces/order-repository.interface";
 import ITemplateRepository from "../../repositories/interfaces/template-repository.interface";
@@ -19,7 +20,6 @@ import IPaymentService, {
 
 @injectable()
 export default class PaymentService implements IPaymentService {
-  private flatPricePaise: number;
   private currency: string;
 
   constructor(
@@ -29,9 +29,21 @@ export default class PaymentService implements IPaymentService {
     @inject(TYPES.IWorkRepository) private workRepository: IWorkRepository,
     @inject(TYPES.IUserRepository) private userRepository: IUserRepository
   ) {
-    const envPrice = Number(process.env.FLAT_PRICE_PAISE);
-    this.flatPricePaise = !isNaN(envPrice) && envPrice > 0 ? envPrice : 49900;
     this.currency = (process.env.CURRENCY || "INR").toUpperCase();
+  }
+
+  private rupeesToPaise(rupees: unknown, fallback: number): number {
+    const value = Number(rupees);
+    const whole = Number.isFinite(value) && value >= 0 ? Math.round(value) : fallback;
+    return whole * 100;
+  }
+
+  private offerPaise(template: ITemplate): number {
+    return this.rupeesToPaise(template.offerPrice, DEFAULT_OFFER_PRICE);
+  }
+
+  private actualPaise(template: ITemplate): number {
+    return this.rupeesToPaise(template.actualPrice, DEFAULT_ACTUAL_PRICE);
   }
 
   private formatDisplayAmount(amountInPaise: number, currency: string): string {
@@ -124,12 +136,26 @@ export default class PaymentService implements IPaymentService {
       const digits = rawPhone.replace(/\D/g, "");
       const customerPhone = digits.length >= 10 ? digits.slice(-10) : undefined;
 
+      const pricePaise = this.offerPaise(template);
+      const listPaise = this.actualPaise(template);
       const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-      if (
+      const pendingIsMock = String(existingPending?.razorpayOrderId || "").startsWith("order_mock_");
+      const canReusePending =
         existingPending &&
         existingPending.createdAt > thirtyMinutesAgo &&
-        existingPending.amount === this.flatPricePaise
-      ) {
+        existingPending.amount === pricePaise &&
+        pendingIsMock === this.paymentGateway.isMock();
+
+      if (existingPending && !canReusePending) {
+        await this.orderRepository.update(String(existingPending._id), {
+          status: "EXPIRED",
+          failureReason: pendingIsMock
+            ? "Replaced mock order after Razorpay keys were configured"
+            : "Payment order expired",
+        });
+      }
+
+      if (canReusePending && existingPending) {
         return {
           orderId: String(existingPending._id),
           orderNumber: existingPending.orderNumber,
@@ -142,6 +168,8 @@ export default class PaymentService implements IPaymentService {
           customerName,
           customerEmail,
           customerPhone,
+          actualDisplayAmount:
+            listPaise > pricePaise ? this.formatDisplayAmount(listPaise, existingPending.currency) : undefined,
           notes: {
             invitationName,
           },
@@ -151,7 +179,7 @@ export default class PaymentService implements IPaymentService {
       const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
 
       const gatewayOrder = await this.paymentGateway.createOrder({
-        amount: this.flatPricePaise,
+        amount: pricePaise,
         currency: this.currency,
         receipt: orderNumber,
         notes: {
@@ -192,6 +220,8 @@ export default class PaymentService implements IPaymentService {
         customerName,
         customerEmail,
         customerPhone,
+        actualDisplayAmount:
+          listPaise > pricePaise ? this.formatDisplayAmount(listPaise, order.currency) : undefined,
         notes: {
           invitationName,
         },
@@ -226,12 +256,15 @@ export default class PaymentService implements IPaymentService {
         };
       }
 
-      // Verify cryptographic signature
-      const isValid = this.paymentGateway.verifyPaymentSignature(
-        input.razorpayOrderId,
-        input.razorpayPaymentId,
-        input.razorpaySignature
-      );
+      const mockOrder =
+        this.paymentGateway.isMock() && String(order.razorpayOrderId || "").startsWith("order_mock_");
+      const isValid =
+        mockOrder ||
+        this.paymentGateway.verifyPaymentSignature(
+          input.razorpayOrderId,
+          input.razorpayPaymentId,
+          input.razorpaySignature
+        );
 
       if (!isValid) {
         await this.orderRepository.update(String(order._id), {

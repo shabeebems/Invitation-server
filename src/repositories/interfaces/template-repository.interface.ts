@@ -16,6 +16,8 @@ export type TemplateUpdate = {
   content?: Partial<ITemplateContent>;
   selectedThemeId?: string | Types.ObjectId;
   images?: ITemplateImage[];
+  actualPrice?: number;
+  offerPrice?: number;
 };
 
 export default interface ITemplateRepository {

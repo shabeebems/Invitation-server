@@ -259,6 +259,43 @@ export default class TemplateService implements ITemplateService {
     });
   }
 
+  async updatePricing(slug: string, body: unknown) {
+    return guard("Could not update pricing", async () => {
+      const normalized = slug.trim();
+      const fields = requestBody(body);
+
+      if (!normalized) {
+        throw new BadRequestError("Template slug is required");
+      }
+
+      const actualPrice = this.priceFrom(fields.actualPrice, "Actual price");
+      const offerPrice = this.priceFrom(fields.offerPrice, "Offer price");
+
+      if (offerPrice > actualPrice) {
+        throw new BadRequestError("Offer price cannot be more than the actual price");
+      }
+
+      const template = await this.templateRepository.updateBySlug(normalized, { actualPrice, offerPrice });
+
+      if (!template) {
+        throw new NotFoundError("Template not found");
+      }
+
+      const [json] = await this.withThemes([template]);
+      return json;
+    });
+  }
+
+  private priceFrom(value: unknown, label: string) {
+    const price = Number(value);
+
+    if (value === "" || value === null || value === undefined || !Number.isInteger(price) || price < 0) {
+      throw new BadRequestError(`${label} must be a whole number of rupees`);
+    }
+
+    return price;
+  }
+
   private async withThemes(templates: ITemplate[]) {
     const ensured: ITemplate[] = [];
 
