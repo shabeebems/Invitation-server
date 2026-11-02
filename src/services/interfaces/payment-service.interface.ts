@@ -12,6 +12,7 @@ export interface CreateOrderResult {
   gatewayOrderId: string;
   amount: number;
   displayAmount: string;
+  actualDisplayAmount?: string;
   currency: string;
   keyId: string;
   isMock: boolean;

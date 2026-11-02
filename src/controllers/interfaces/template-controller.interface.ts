@@ -5,4 +5,5 @@ export default interface ITemplateController {
   show(req: Request, res: Response): Promise<void>;
   update(req: Request, res: Response): Promise<void>;
   selectTheme(req: Request, res: Response): Promise<void>;
+  updatePricing(req: Request, res: Response): Promise<void>;
 }

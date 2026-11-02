@@ -23,6 +23,11 @@ templateRouter.put(
   asyncHandler((req, res) => templateController.selectTheme(req, res))
 );
 templateRouter.put(
+  "/:slug/pricing",
+  requireAdmin,
+  asyncHandler((req, res) => templateController.updatePricing(req, res))
+);
+templateRouter.put(
   "/:slug",
   requireAdmin,
   uploadImageMiddleware,

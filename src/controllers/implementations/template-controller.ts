@@ -41,6 +41,15 @@ export default class TemplateController implements ITemplateController {
     });
   }
 
+  async updatePricing(req: Request, res: Response): Promise<void> {
+    const template = await this.templateService.updatePricing(String(req.params.slug || ""), req.body);
+
+    res.status(200).json({
+      success: true,
+      template,
+    });
+  }
+
   async selectTheme(req: Request, res: Response): Promise<void> {
     const template = await this.templateService.selectTheme(String(req.params.slug || ""), req.body);
 

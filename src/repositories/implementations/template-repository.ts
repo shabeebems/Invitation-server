@@ -85,6 +85,14 @@ export default class TemplateRepository implements ITemplateRepository {
       update.selectedThemeId = data.selectedThemeId;
     }
 
+    if (data.actualPrice !== undefined) {
+      update.actualPrice = data.actualPrice;
+    }
+
+    if (data.offerPrice !== undefined) {
+      update.offerPrice = data.offerPrice;
+    }
+
     return TemplateModel.findOneAndUpdate(
       { slug: slug.toLowerCase() },
       { $set: update },

@@ -444,11 +444,18 @@ export interface ITemplate extends Document {
   categoryId: Types.ObjectId;
   selectedThemeId?: Types.ObjectId;
   isActive: boolean;
+  /** List price in rupees, shown struck through next to the offer price. */
+  actualPrice: number;
+  /** Price in rupees the template is offered at. */
+  offerPrice: number;
   images: ITemplateImage[];
   content: ITemplateContent;
   createdAt: Date;
   updatedAt: Date;
 }
+
+export const DEFAULT_ACTUAL_PRICE = 1499;
+export const DEFAULT_OFFER_PRICE = 999;
 
 const contentFields = TEMPLATE_CONTENT_KEYS.reduce(
   (fields, key) => {
@@ -556,6 +563,16 @@ const templateSchema = new Schema<ITemplate>(
     isActive: {
       type: Boolean,
       default: true,
+    },
+    actualPrice: {
+      type: Number,
+      default: DEFAULT_ACTUAL_PRICE,
+      min: 0,
+    },
+    offerPrice: {
+      type: Number,
+      default: DEFAULT_OFFER_PRICE,
+      min: 0,
     },
     images: {
       type: [templateImageSchema],
