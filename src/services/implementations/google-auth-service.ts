@@ -3,10 +3,9 @@ import { UnauthorizedError } from "../../common/errors";
 import TYPES from "../../constants/types";
 import IUserRepository from "../../repositories/interfaces/user-repository.interface";
 import { AuthSession, RequestMeta } from "../interfaces/auth-service.interface";
-import { welcomeEmail } from "../email/email-templates";
-import IEmailSender from "../interfaces/email-sender.interface";
 import IGoogleAuthService from "../interfaces/google-auth-service.interface";
 import IGoogleIdentityProvider from "../interfaces/google-identity.interface";
+import INotificationService from "../interfaces/notification-service.interface";
 import ISessionService from "../interfaces/session-service.interface";
 
 @injectable()
@@ -15,7 +14,7 @@ export default class GoogleAuthService implements IGoogleAuthService {
     @inject(TYPES.IGoogleIdentityProvider) private readonly google: IGoogleIdentityProvider,
     @inject(TYPES.IUserRepository) private readonly users: IUserRepository,
     @inject(TYPES.ISessionService) private readonly sessions: ISessionService,
-    @inject(TYPES.IEmailSender) private readonly email: IEmailSender
+    @inject(TYPES.INotificationService) private readonly notifications: INotificationService
   ) {}
 
   async login(credential: string, meta: RequestMeta): Promise<AuthSession> {
@@ -55,11 +54,7 @@ export default class GoogleAuthService implements IGoogleAuthService {
       emailVerified: true,
     });
 
-    const origin = process.env.CLIENT_ORIGIN || "http://localhost:3000";
-    await this.email.send({
-      to: user.email,
-      ...welcomeEmail(user.name, origin),
-    });
+    void this.notifications.welcome(user);
 
     return this.sessions.issue(user, meta);
   }

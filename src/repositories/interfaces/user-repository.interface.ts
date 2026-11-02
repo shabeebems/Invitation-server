@@ -22,7 +22,7 @@ export default interface IUserRepository {
   setPasswordHash(id: string, passwordHash: string): Promise<void>;
   setEmailVerified(id: string): Promise<void>;
   setVerifyToken(id: string, tokenHash: string, expiresAt: Date): Promise<void>;
-  consumeVerifyToken(tokenHash: string): Promise<IUser | null>;
+  consumeVerifyToken(tokenHash: string): Promise<{ user: IUser; newlyVerified: boolean } | null>;
   setResetToken(id: string, tokenHash: string, expiresAt: Date): Promise<void>;
   consumeResetToken(tokenHash: string): Promise<IUser | null>;
 }

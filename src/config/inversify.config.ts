@@ -26,6 +26,8 @@ import IWorkRepository from "../repositories/interfaces/work-repository.interfac
 import AccountSecurityController from "../controllers/implementations/account-security-controller";
 import SmtpEmailSender from "../services/implementations/smtp-email-sender";
 import IEmailSender from "../services/interfaces/email-sender.interface";
+import NotificationService from "../services/implementations/notification-service";
+import INotificationService from "../services/interfaces/notification-service.interface";
 import EmailVerificationService from "../services/implementations/email-verification-service";
 import IEmailVerificationService from "../services/interfaces/email-verification-service.interface";
 import GoogleAuthController from "../controllers/implementations/google-auth-controller";
@@ -92,7 +94,8 @@ container.bind<IUserRepository>(TYPES.IUserRepository).to(UserRepository);
 container.bind<IRefreshTokenRepository>(TYPES.IRefreshTokenRepository).to(RefreshTokenRepository);
 container.bind<IPasswordService>(TYPES.IPasswordService).to(PasswordService);
 container.bind<ITokenService>(TYPES.ITokenService).to(TokenService);
-container.bind<IEmailSender>(TYPES.IEmailSender).to(SmtpEmailSender);
+container.bind<IEmailSender>(TYPES.IEmailSender).to(SmtpEmailSender).inSingletonScope();
+container.bind<INotificationService>(TYPES.INotificationService).to(NotificationService);
 container.bind<IEmailVerificationService>(TYPES.IEmailVerificationService).to(EmailVerificationService);
 container.bind<IPasswordResetService>(TYPES.IPasswordResetService).to(PasswordResetService);
 container.bind<IGoogleIdentityProvider>(TYPES.IGoogleIdentityProvider).to(GoogleIdentityProvider);

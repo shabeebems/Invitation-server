@@ -39,6 +39,7 @@ import type ITemplateRepository from "../../repositories/interfaces/template-rep
 import type IOrderRepository from "../../repositories/interfaces/order-repository.interface";
 import type IThemeRepository from "../../repositories/interfaces/theme-repository.interface";
 import type IWorkRepository from "../../repositories/interfaces/work-repository.interface";
+import type INotificationService from "../interfaces/notification-service.interface";
 import IWorkService, { WorkActor } from "../interfaces/work-service.interface";
 
 const RESERVED_SLUGS = new Set([
@@ -73,7 +74,8 @@ export default class WorkService implements IWorkService {
     @inject(TYPES.ITemplateRepository) private readonly templateRepository: ITemplateRepository,
     @inject(TYPES.ICategoryRepository) private readonly categoryRepository: ICategoryRepository,
     @inject(TYPES.IThemeRepository) private readonly themeRepository: IThemeRepository,
-    @inject(TYPES.IOrderRepository) private readonly orderRepository: IOrderRepository
+    @inject(TYPES.IOrderRepository) private readonly orderRepository: IOrderRepository,
+    @inject(TYPES.INotificationService) private readonly notifications: INotificationService
   ) {}
 
   async list(actor: WorkActor) {
@@ -192,6 +194,7 @@ export default class WorkService implements IWorkService {
         await this.orderRepository.update(String(linkedOrderId), {
           workId: work._id as Types.ObjectId,
         });
+        void this.notifications.invitationPublished(String(work._id));
       }
 
       const [json] = await this.withThemes([work]);

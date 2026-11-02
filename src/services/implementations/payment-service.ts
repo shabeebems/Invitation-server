@@ -10,6 +10,7 @@ import IOrderRepository from "../../repositories/interfaces/order-repository.int
 import ITemplateRepository from "../../repositories/interfaces/template-repository.interface";
 import IUserRepository from "../../repositories/interfaces/user-repository.interface";
 import IWorkRepository from "../../repositories/interfaces/work-repository.interface";
+import INotificationService from "../interfaces/notification-service.interface";
 import IPaymentGateway from "../interfaces/payment-gateway.interface";
 import IPaymentService, {
   CreateOrderInput,
@@ -27,7 +28,8 @@ export default class PaymentService implements IPaymentService {
     @inject(TYPES.IPaymentGateway) private paymentGateway: IPaymentGateway,
     @inject(TYPES.ITemplateRepository) private templateRepository: ITemplateRepository,
     @inject(TYPES.IWorkRepository) private workRepository: IWorkRepository,
-    @inject(TYPES.IUserRepository) private userRepository: IUserRepository
+    @inject(TYPES.IUserRepository) private userRepository: IUserRepository,
+    @inject(TYPES.INotificationService) private notifications: INotificationService
   ) {
     this.currency = (process.env.CURRENCY || "INR").toUpperCase();
   }
@@ -294,6 +296,7 @@ export default class PaymentService implements IPaymentService {
           work.publishedAt = now;
           await work.save();
           workSlug = work.slug;
+          void this.notifications.invitationPublished(String(work._id));
         }
       }
 
@@ -348,6 +351,7 @@ export default class PaymentService implements IPaymentService {
                 work.orderId = order._id as Types.ObjectId;
                 work.publishedAt = now;
                 await work.save();
+                void this.notifications.invitationPublished(String(work._id));
               }
             }
           }

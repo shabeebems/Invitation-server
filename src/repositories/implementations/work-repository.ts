@@ -93,4 +93,16 @@ export default class WorkRepository implements IWorkRepository {
       { new: true, runValidators: true }
     ).populate([...populatePaths]);
   }
+
+  async claimPublishedNotice(id: string): Promise<boolean> {
+    const result = await WorkModel.updateOne(
+      { _id: id, isPublished: true, publishedNoticeAt: null },
+      { $set: { publishedNoticeAt: new Date() } }
+    );
+    return result.modifiedCount === 1;
+  }
+
+  async releasePublishedNotice(id: string): Promise<void> {
+    await WorkModel.updateOne({ _id: id }, { $set: { publishedNoticeAt: null } });
+  }
 }

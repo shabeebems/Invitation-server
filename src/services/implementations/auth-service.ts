@@ -76,7 +76,10 @@ export default class AuthService implements IAuthService {
       role: "customer",
       emailVerified: false,
     });
-    await this.verification.issue(user, meta);
+    // The account already exists at this point, so a mail outage must not fail signup; the user can resend.
+    this.verification.issue(user, meta).catch((error) => {
+      console.error("email.verification.failed", error instanceof Error ? error.message : error);
+    });
 
     return this.sessions.issue(user, meta);
   }

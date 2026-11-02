@@ -7,6 +7,7 @@ import IUserRepository from "../../repositories/interfaces/user-repository.inter
 import { RequestMeta } from "../interfaces/auth-service.interface";
 import { passwordResetEmail } from "../email/email-templates";
 import IEmailSender from "../interfaces/email-sender.interface";
+import INotificationService from "../interfaces/notification-service.interface";
 import IPasswordResetService from "../interfaces/password-reset-service.interface";
 import IPasswordService from "../interfaces/password-service.interface";
 import ITokenService from "../interfaces/token-service.interface";
@@ -20,7 +21,8 @@ export default class PasswordResetService implements IPasswordResetService {
     @inject(TYPES.IRefreshTokenRepository) private readonly sessions: IRefreshTokenRepository,
     @inject(TYPES.IPasswordService) private readonly passwords: IPasswordService,
     @inject(TYPES.ITokenService) private readonly tokens: ITokenService,
-    @inject(TYPES.IEmailSender) private readonly email: IEmailSender
+    @inject(TYPES.IEmailSender) private readonly email: IEmailSender,
+    @inject(TYPES.INotificationService) private readonly notifications: INotificationService
   ) {}
 
   async request(email: string, _meta: RequestMeta): Promise<void> {
@@ -39,11 +41,11 @@ export default class PasswordResetService implements IPasswordResetService {
     const origin = process.env.CLIENT_ORIGIN || "http://localhost:3000";
     await this.email.send({
       to: user.email,
-      ...passwordResetEmail(`${origin}/reset-password?token=${raw}`),
+      ...passwordResetEmail({ name: user.name, resetUrl: `${origin}/reset-password?token=${raw}` }),
     });
   }
 
-  async reset(token: string, password: string, _meta: RequestMeta): Promise<void> {
+  async reset(token: string, password: string, meta: RequestMeta): Promise<void> {
     if (String(password || "").length < 8) {
       throw new BadRequestError("Password must be at least 8 characters");
     }
@@ -56,9 +58,10 @@ export default class PasswordResetService implements IPasswordResetService {
 
     await this.users.setPasswordHash(String(user._id), await this.passwords.hash(password));
     await this.sessions.revokeAllForUser(String(user._id));
+    void this.notifications.passwordChanged(user, { added: false, signedOutElsewhere: true, meta });
   }
 
-  async change(userId: string, currentPassword: string, nextPassword: string, _meta: RequestMeta): Promise<boolean> {
+  async change(userId: string, currentPassword: string, nextPassword: string, meta: RequestMeta): Promise<boolean> {
     if (String(nextPassword || "").length < 8) {
       throw new BadRequestError("Password must be at least 8 characters");
     }
@@ -85,6 +88,8 @@ export default class PasswordResetService implements IPasswordResetService {
     if (hadPassword) {
       await this.sessions.revokeAllForUser(userId);
     }
+
+    void this.notifications.passwordChanged(user, { added: !hadPassword, signedOutElsewhere: hadPassword, meta });
 
     return hadPassword;
   }

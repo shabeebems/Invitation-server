@@ -59,12 +59,20 @@ export default class UserRepository implements IUserRepository {
     await UserModel.updateOne({ _id: id }, { emailVerifyTokenHash: tokenHash, emailVerifyExpires: expiresAt });
   }
 
-  consumeVerifyToken(tokenHash: string): Promise<IUser | null> {
-    return UserModel.findOneAndUpdate(
+  async consumeVerifyToken(tokenHash: string): Promise<{ user: IUser; newlyVerified: boolean } | null> {
+    const before = await UserModel.findOneAndUpdate(
       { emailVerifyTokenHash: tokenHash, emailVerifyExpires: { $gt: new Date() } },
       { emailVerified: true },
-      { new: true }
+      { new: false }
     );
+
+    if (!before) {
+      return null;
+    }
+
+    const newlyVerified = !before.emailVerified;
+    before.emailVerified = true;
+    return { user: before, newlyVerified };
   }
 
   async setResetToken(id: string, tokenHash: string, expiresAt: Date): Promise<void> {

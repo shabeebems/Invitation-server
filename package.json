@@ -18,6 +18,7 @@
     "seed:enabled-sections": "tsx src/scripts/seed-enabled-sections.ts",
     "seed:house-layouts": "tsx src/scripts/seed-house-layouts.ts",
     "seed:template-prices": "tsx src/scripts/seed-template-prices.ts",
+    "emails:preview": "tsx src/scripts/preview-emails.ts",
     "cleanup:templates": "tsx src/scripts/cleanup-removed-templates.ts",
     "cleanup:royal-themes": "tsx src/scripts/cleanup-royal-themes.ts",
     "cleanup:royal-content": "tsx src/scripts/cleanup-royal-content.ts",

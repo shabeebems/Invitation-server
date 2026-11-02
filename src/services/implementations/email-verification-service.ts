@@ -8,6 +8,7 @@ import { RequestMeta } from "../interfaces/auth-service.interface";
 import { verificationEmail } from "../email/email-templates";
 import IEmailSender from "../interfaces/email-sender.interface";
 import IEmailVerificationService from "../interfaces/email-verification-service.interface";
+import INotificationService from "../interfaces/notification-service.interface";
 import ITokenService from "../interfaces/token-service.interface";
 
 const TTL_MS = 60 * 60 * 1000;
@@ -17,7 +18,8 @@ export default class EmailVerificationService implements IEmailVerificationServi
   constructor(
     @inject(TYPES.IUserRepository) private readonly users: IUserRepository,
     @inject(TYPES.ITokenService) private readonly tokens: ITokenService,
-    @inject(TYPES.IEmailSender) private readonly email: IEmailSender
+    @inject(TYPES.IEmailSender) private readonly email: IEmailSender,
+    @inject(TYPES.INotificationService) private readonly notifications: INotificationService
   ) {}
 
   async issue(user: IUser, _meta: RequestMeta): Promise<void> {
@@ -26,7 +28,7 @@ export default class EmailVerificationService implements IEmailVerificationServi
     const origin = process.env.CLIENT_ORIGIN || "http://localhost:3000";
     await this.email.send({
       to: user.email,
-      ...verificationEmail(`${origin}/verify-email?token=${raw}`),
+      ...verificationEmail({ name: user.name, verifyUrl: `${origin}/verify-email?token=${raw}` }),
     });
   }
 
@@ -37,10 +39,14 @@ export default class EmailVerificationService implements IEmailVerificationServi
       throw new BadRequestError("Verification token is required");
     }
 
-    const user = await this.users.consumeVerifyToken(this.tokens.hash(raw));
+    const result = await this.users.consumeVerifyToken(this.tokens.hash(raw));
 
-    if (!user) {
+    if (!result) {
       throw new BadRequestError("Verification link is invalid or expired");
+    }
+
+    if (result.newlyVerified && !result.user.googleId) {
+      void this.notifications.welcome(result.user);
     }
   }
 

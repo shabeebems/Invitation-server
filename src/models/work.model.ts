@@ -21,6 +21,7 @@ export interface IWork extends Document {
   paymentStatus: "unpaid" | "paid";
   orderId?: Types.ObjectId;
   publishedAt?: Date;
+  publishedNoticeAt?: Date | null;
   images: ITemplateImage[];
   content: ITemplateContent;
   createdAt: Date;
@@ -91,6 +92,10 @@ const workSchema = new Schema<IWork>(
       index: true,
     },
     publishedAt: {
+      type: Date,
+      default: null,
+    },
+    publishedNoticeAt: {
       type: Date,
       default: null,
     },

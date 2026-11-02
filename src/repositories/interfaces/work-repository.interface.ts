@@ -39,4 +39,7 @@ export default interface IWorkRepository {
   create(data: WorkInput): Promise<IWork>;
   updateBySlug(slug: string, data: WorkUpdate): Promise<IWork | null>;
   updateSelectedTheme(id: string, selectedThemeId: string): Promise<IWork | null>;
+  /** Atomically marks the "invitation is live" email as owned by the caller; false if already sent or claimed. */
+  claimPublishedNotice(id: string): Promise<boolean>;
+  releasePublishedNotice(id: string): Promise<void>;
 }

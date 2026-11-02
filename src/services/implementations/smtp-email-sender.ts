@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { injectable } from "inversify";
 import nodemailer, { Transporter } from "nodemailer";
 import { InternalServerError } from "../../common/errors";
@@ -24,6 +25,8 @@ export default class SmtpEmailSender implements IEmailSender {
         subject: message.subject,
         text: message.text,
         html: message.html,
+        // A unique ref stops Gmail from collapsing repeat emails (e.g. two reset links) into one thread.
+        headers: { "X-Entity-Ref-ID": randomUUID() },
       });
     } catch (error) {
       const detail = error instanceof Error ? error.message : "unknown error";
@@ -52,6 +55,9 @@ export default class SmtpEmailSender implements IEmailSender {
         user: config.user,
         pass: config.pass,
       },
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 20_000,
     });
 
     return this.transport;

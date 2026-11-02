@@ -23,6 +23,7 @@ const TYPES = {
   IAuthController: Symbol.for("IAuthController"),
   ISessionService: Symbol.for("ISessionService"),
   IEmailSender: Symbol.for("IEmailSender"),
+  INotificationService: Symbol.for("INotificationService"),
   IEmailVerificationService: Symbol.for("IEmailVerificationService"),
   IPasswordResetService: Symbol.for("IPasswordResetService"),
   IGoogleIdentityProvider: Symbol.for("IGoogleIdentityProvider"),
