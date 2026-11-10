@@ -30,6 +30,7 @@ import {
   contentFamilyFromCategory,
   droppedProgramPhotoIds,
   findTemplateImage,
+  isListingImageSlot,
   restoreProgramPhotos,
   upsertTemplateImage,
 } from "../../models/template.model";
@@ -456,14 +457,16 @@ export default class WorkService implements IWorkService {
 
   private async snapshotFromTemplate(template: ITemplate) {
     const images = await Promise.all(
-      (template.images || []).map(async (image) => {
-        const cloned = await this.cloneImage(image.url, image.publicId);
-        return {
-          slot: image.slot,
-          url: cloned.url,
-          publicId: cloned.publicId,
-        };
-      })
+      (template.images || [])
+        .filter((image) => !isListingImageSlot(image.slot))
+        .map(async (image) => {
+          const cloned = await this.cloneImage(image.url, image.publicId);
+          return {
+            slot: image.slot,
+            url: cloned.url,
+            publicId: cloned.publicId,
+          };
+        })
     );
 
     const content = JSON.parse(JSON.stringify(template.content || {})) as ITemplateContent;

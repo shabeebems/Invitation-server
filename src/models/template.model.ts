@@ -410,6 +410,13 @@ export function droppedProgramPhotoIds(
     .filter((id) => id && !kept.has(id));
 }
 
+/** Catalog card photos — shown only on template listings, never copied into invitations. */
+export const LISTING_IMAGE_SLOTS = ["listingFront", "listingBack"] as const;
+
+export function isListingImageSlot(slot: string) {
+  return (LISTING_IMAGE_SLOTS as readonly string[]).includes(slot);
+}
+
 export function findTemplateImage(images: ITemplateImage[] | undefined, slot: string) {
   return images?.find((image) => image.slot === slot);
 }
