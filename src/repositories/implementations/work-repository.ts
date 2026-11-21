@@ -41,6 +41,7 @@ export default class WorkRepository implements IWorkRepository {
 
   async create(data: WorkInput): Promise<IWork> {
     const created = await WorkModel.create({
+      ...(data._id ? { _id: data._id } : {}),
       slug: data.slug,
       name: data.name,
       description: data.description || "",

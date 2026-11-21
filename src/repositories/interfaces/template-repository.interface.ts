@@ -22,6 +22,7 @@ export type TemplateUpdate = {
 
 export default interface ITemplateRepository {
   findAll(): Promise<ITemplate[]>;
+  findActive(): Promise<ITemplate[]>;
   findBySlug(slug: string): Promise<ITemplate | null>;
   findById(id: string): Promise<ITemplate | null>;
   create(data: TemplateInput): Promise<ITemplate>;

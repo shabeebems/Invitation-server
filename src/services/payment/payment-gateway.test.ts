@@ -84,3 +84,22 @@ test("RazorpayGateway: verifies mock signature in mock mode", async () => {
     );
   });
 });
+
+test("RazorpayGateway: assertProductionReady rejects mock credentials in production", async () => {
+  await withoutRazorpayEnv(() => {
+    const previousEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = "production";
+    const gateway = new RazorpayGateway();
+
+    try {
+      assert.throws(() => gateway.assertProductionReady(), /mock mode/i);
+      assert.throws(() => gateway.verifyPaymentSignature("order_1", "pay_1", "sig"), /mock mode/i);
+    } finally {
+      if (previousEnv === undefined) {
+        delete process.env.NODE_ENV;
+      } else {
+        process.env.NODE_ENV = previousEnv;
+      }
+    }
+  });
+});

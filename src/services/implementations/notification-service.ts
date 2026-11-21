@@ -122,7 +122,9 @@ export default class NotificationService implements INotificationService {
     }
 
     const order = work.orderId ? await this.orders.findById(idOf(work.orderId)) : null;
-    const origin = (process.env.CLIENT_ORIGIN || "http://localhost:3000").replace(/\/+$/, "");
+    const originRaw =
+      process.env.CLIENT_ORIGINS || process.env.CLIENT_ORIGIN || "http://localhost:3000";
+    const origin = (originRaw.split(",")[0]?.trim() || "http://localhost:3000").replace(/\/+$/, "");
     const liveUrl = `${origin}/${work.slug}`;
     const content = work.content || {};
     const couple = [content.groomName, content.brideName].filter(Boolean).join(" & ");

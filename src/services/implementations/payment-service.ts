@@ -69,23 +69,80 @@ export default class PaymentService implements IPaymentService {
     userMeta?: { email?: string; phone?: string; ip?: string; ua?: string }
   ): Promise<CreateOrderResult> {
     return guard("Could not create payment order", async () => {
-      const template = await this.templateRepository.findById(input.templateId);
+      let linkedWorkId: Types.ObjectId | undefined;
+      let invitationName = String(input.draftName || "").trim();
+      // Prefer the work's template when paying for an existing invitation — never trust a
+      // mismatched client templateId for pricing / order binding.
+      let templateId = String(input.templateId || "").trim();
+
+      if (input.workSlug) {
+        const existingWork = await this.workRepository.findBySlug(input.workSlug);
+
+        if (!existingWork) {
+          throw new NotFoundError("Invitation not found");
+        }
+
+        if (this.idOf(existingWork.userId) !== userId) {
+          throw new ForbiddenError("Not authorized to pay for this invitation");
+        }
+
+        if (existingWork.paymentStatus === "paid") {
+          return {
+            orderId: String(existingWork.orderId || ""),
+            orderNumber: "ALREADY_PAID",
+            gatewayOrderId: "",
+            amount: 0,
+            displayAmount: "₹0.00",
+            currency: this.currency,
+            keyId: this.paymentGateway.getKeyId(),
+            isMock: this.paymentGateway.isMock(),
+            alreadyPaid: true,
+            notes: {
+              invitationName: existingWork.name || invitationName,
+            },
+          };
+        }
+
+        const workTemplateId = this.idOf(existingWork.templateId);
+        if (templateId && templateId !== workTemplateId) {
+          throw new BadRequestError("Payment template does not match this invitation");
+        }
+
+        templateId = workTemplateId;
+        linkedWorkId = existingWork._id as Types.ObjectId;
+        invitationName = existingWork.name || invitationName;
+      }
+
+      if (!templateId) {
+        throw new BadRequestError("Template is required");
+      }
+
+      const template = await this.templateRepository.findById(templateId);
       if (!template) {
         throw new NotFoundError("Template not found");
       }
 
-      let linkedWorkId: Types.ObjectId | undefined;
-      let invitationName = input.draftName || template.name;
+      if (!template.isActive) {
+        throw new BadRequestError("This template is no longer available for purchase");
+      }
 
-      if (input.workSlug) {
-        const existingWork = await this.workRepository.findBySlug(input.workSlug);
-        // Only link and check if this work belongs to the authenticated user
-        if (existingWork && this.idOf(existingWork.userId) === userId) {
-          if (existingWork.paymentStatus === "paid") {
+      invitationName = invitationName || template.name;
+
+      // Heal: PAID order already linked to this unpaid work (verify/webhook published after mark-paid failed).
+      // Without this, retrying checkout would create a second charge.
+      if (linkedWorkId) {
+        const linkedPaid = await this.orderRepository.findByUserAndWork(userId, String(linkedWorkId));
+        if (
+          linkedPaid?.status === "PAID" &&
+          this.idOf(linkedPaid.templateId) === templateId
+        ) {
+          await this.publishLinkedWork(linkedPaid, new Date());
+          const healed = await this.workRepository.findById(String(linkedWorkId));
+          if (healed?.paymentStatus === "paid") {
             return {
-              orderId: String(existingWork.orderId || ""),
-              orderNumber: "ALREADY_PAID",
-              gatewayOrderId: "",
+              orderId: String(linkedPaid._id),
+              orderNumber: linkedPaid.orderNumber,
+              gatewayOrderId: linkedPaid.razorpayOrderId,
               amount: 0,
               displayAmount: "₹0.00",
               currency: this.currency,
@@ -93,42 +150,86 @@ export default class PaymentService implements IPaymentService {
               isMock: this.paymentGateway.isMock(),
               alreadyPaid: true,
               notes: {
-                invitationName: existingWork.name || invitationName,
+                invitationName,
               },
             };
           }
-          linkedWorkId = existingWork._id as Types.ObjectId;
-          invitationName = existingWork.name || invitationName;
         }
       }
 
       // If user has an already PAID order for this template that has not been linked to a work yet (e.g. browser dropped or webhook fulfilled)
       const unlinkedPaid = await this.orderRepository.findUnlinkedPaidOrderByUserAndTemplate(
         userId,
-        input.templateId
+        templateId
       );
 
       if (unlinkedPaid) {
-        return {
+        // Draft flow: client createWork will claim this paid order.
+        if (!linkedWorkId) {
+          return {
+            orderId: String(unlinkedPaid._id),
+            orderNumber: unlinkedPaid.orderNumber,
+            gatewayOrderId: unlinkedPaid.razorpayOrderId,
+            amount: 0,
+            displayAmount: "₹0.00",
+            currency: this.currency,
+            keyId: this.paymentGateway.getKeyId(),
+            isMock: this.paymentGateway.isMock(),
+            alreadyPaid: true,
+            notes: {
+              invitationName,
+            },
+          };
+        }
+
+        let orderForPublish = await this.orderRepository.claimUnlinkedPaidOrder({
           orderId: String(unlinkedPaid._id),
-          orderNumber: unlinkedPaid.orderNumber,
-          gatewayOrderId: unlinkedPaid.razorpayOrderId,
-          amount: 0,
-          displayAmount: "₹0.00",
-          currency: this.currency,
-          keyId: this.paymentGateway.getKeyId(),
-          isMock: this.paymentGateway.isMock(),
-          alreadyPaid: true,
-          notes: {
-            invitationName,
-          },
-        };
+          userId,
+          templateId,
+          workId: linkedWorkId,
+        });
+
+        if (!orderForPublish) {
+          const latest = await this.orderRepository.findById(String(unlinkedPaid._id));
+          if (latest && this.idOf(latest.workId) === String(linkedWorkId)) {
+            orderForPublish = latest;
+          }
+        }
+
+        if (orderForPublish && this.idOf(orderForPublish.workId) === String(linkedWorkId)) {
+          try {
+            await this.publishLinkedWork(orderForPublish, new Date());
+          } catch (error) {
+            await this.orderRepository
+              .releaseWorkClaim(String(orderForPublish._id), linkedWorkId)
+              .catch(() => undefined);
+            throw error;
+          }
+
+          return {
+            orderId: String(orderForPublish._id),
+            orderNumber: orderForPublish.orderNumber,
+            gatewayOrderId: orderForPublish.razorpayOrderId,
+            amount: 0,
+            displayAmount: "₹0.00",
+            currency: this.currency,
+            keyId: this.paymentGateway.getKeyId(),
+            isMock: this.paymentGateway.isMock(),
+            alreadyPaid: true,
+            notes: {
+              invitationName,
+            },
+          };
+        }
+
+        // Paid order was claimed by a different work — continue and create a new order
+        // for this unpaid invitation instead of returning a false alreadyPaid.
       }
 
       // Check if user has an active, unexpired CREATED order for this template or work within the last 30 minutes
       const existingPending = await this.orderRepository.findPendingOrderByUserAndTemplate(
         userId,
-        input.templateId
+        templateId
       );
 
       const user = await this.userRepository.findById(userId);
@@ -158,6 +259,21 @@ export default class PaymentService implements IPaymentService {
       }
 
       if (canReusePending && existingPending) {
+        const pendingWorkId = this.idOf(existingPending.workId);
+
+        if (linkedWorkId) {
+          // Bind (or rebind) this pending order to the invitation being paid for.
+          if (pendingWorkId !== String(linkedWorkId)) {
+            await this.orderRepository.update(String(existingPending._id), { workId: linkedWorkId });
+          }
+        } else if (pendingWorkId) {
+          // Draft pay must not inherit a prior work link from an abandoned work checkout.
+          await this.orderRepository.releaseWorkClaim(
+            String(existingPending._id),
+            existingPending.workId as Types.ObjectId
+          );
+        }
+
         return {
           orderId: String(existingPending._id),
           orderNumber: existingPending.orderNumber,
@@ -187,14 +303,14 @@ export default class PaymentService implements IPaymentService {
         notes: {
           invitationName,
           userId,
-          templateId: input.templateId,
+          templateId,
         },
       });
 
       const order = await this.orderRepository.create({
         orderNumber,
         userId: new Types.ObjectId(userId),
-        templateId: new Types.ObjectId(input.templateId),
+        templateId: new Types.ObjectId(templateId),
         workId: linkedWorkId,
         amount: gatewayOrder.amount,
         currency: gatewayOrder.currency,
@@ -231,6 +347,41 @@ export default class PaymentService implements IPaymentService {
     });
   }
 
+  private async paidResult(order: IOrder): Promise<VerifyPaymentResult> {
+    // Idempotent: also heal linked works that stayed unpaid after a prior publish failure.
+    const workSlug = order.workId
+      ? (await this.publishLinkedWork(order, new Date())) ||
+        (await this.workRepository.findById(this.idOf(order.workId)))?.slug
+      : undefined;
+
+    return {
+      success: true,
+      status: "PAID",
+      orderNumber: order.orderNumber,
+      workSlug,
+      publishedUrl: workSlug ? `/${workSlug}` : undefined,
+    };
+  }
+
+  private async publishLinkedWork(order: IOrder, now: Date) {
+    if (!order.workId) {
+      return undefined as string | undefined;
+    }
+
+    const work = await this.workRepository.findById(this.idOf(order.workId));
+    if (!work) {
+      return undefined;
+    }
+
+    work.paymentStatus = "paid";
+    work.isPublished = true;
+    work.orderId = order._id as Types.ObjectId;
+    work.publishedAt = now;
+    await work.save();
+    void this.notifications.invitationPublished(String(work._id));
+    return work.slug;
+  }
+
   async verifyPayment(userId: string, input: VerifyPaymentInput): Promise<VerifyPaymentResult> {
     return guard("Payment verification failed", async () => {
       const order = await this.orderRepository.findById(input.orderId);
@@ -244,29 +395,27 @@ export default class PaymentService implements IPaymentService {
 
       // Idempotency: already paid
       if (order.status === "PAID") {
-        let workSlug: string | undefined;
-        if (order.workId) {
-          const w = await this.workRepository.findById(this.idOf(order.workId));
-          workSlug = w?.slug;
-        }
-        return {
-          success: true,
-          status: "PAID",
-          orderNumber: order.orderNumber,
-          workSlug,
-          publishedUrl: workSlug ? `/${workSlug}` : undefined,
-        };
+        return this.paidResult(order);
+      }
+
+      const razorpayOrderId = String(input.razorpayOrderId || "").trim();
+      const razorpayPaymentId = String(input.razorpayPaymentId || "").trim();
+      const razorpaySignature = String(input.razorpaySignature || "").trim();
+
+      if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
+        throw new BadRequestError("Payment proof is incomplete");
+      }
+
+      // Bind gateway proof to this DB order — blocks cross-order verification.
+      if (razorpayOrderId !== String(order.razorpayOrderId || "")) {
+        throw new BadRequestError("Payment does not match this order");
       }
 
       const mockOrder =
         this.paymentGateway.isMock() && String(order.razorpayOrderId || "").startsWith("order_mock_");
       const isValid =
         mockOrder ||
-        this.paymentGateway.verifyPaymentSignature(
-          input.razorpayOrderId,
-          input.razorpayPaymentId,
-          input.razorpaySignature
-        );
+        this.paymentGateway.verifyPaymentSignature(razorpayOrderId, razorpayPaymentId, razorpaySignature);
 
       if (!isValid) {
         await this.orderRepository.update(String(order._id), {
@@ -277,33 +426,34 @@ export default class PaymentService implements IPaymentService {
       }
 
       const now = new Date();
-      await this.orderRepository.update(String(order._id), {
-        status: "PAID",
-        razorpayPaymentId: input.razorpayPaymentId,
-        razorpaySignature: input.razorpaySignature,
+      const paid = await this.orderRepository.markPaidIfUnpaid(String(order._id), {
+        razorpayPaymentId,
+        razorpaySignature,
         paidAt: now,
       });
 
-      let workSlug: string | undefined;
-
-      // Activate and publish linked work if present
-      if (order.workId) {
-        const work = await this.workRepository.findById(this.idOf(order.workId));
-        if (work) {
-          work.paymentStatus = "paid";
-          work.isPublished = true;
-          work.orderId = order._id as Types.ObjectId;
-          work.publishedAt = now;
-          await work.save();
-          workSlug = work.slug;
-          void this.notifications.invitationPublished(String(work._id));
+      // Concurrent verify/webhook already marked PAID — treat as success.
+      if (!paid) {
+        const latest = await this.orderRepository.findById(String(order._id));
+        if (latest?.status === "PAID") {
+          return this.paidResult(latest);
         }
+        throw new BadRequestError("Could not confirm payment");
+      }
+
+      // Payment is durable once marked PAID. Do not fail verify if publish throws —
+      // createOrder / webhook / re-verify will heal the linked work.
+      let workSlug: string | undefined;
+      try {
+        workSlug = await this.publishLinkedWork(paid, now);
+      } catch (error) {
+        console.error("[payment] publish after verify failed", error);
       }
 
       return {
         success: true,
         status: "PAID",
-        orderNumber: order.orderNumber,
+        orderNumber: paid.orderNumber,
         workSlug,
         publishedUrl: workSlug ? `/${workSlug}` : undefined,
       };
@@ -335,23 +485,21 @@ export default class PaymentService implements IPaymentService {
 
         if (razorpayOrderId) {
           const order = await this.orderRepository.findByRazorpayOrderId(razorpayOrderId);
-          if (order && order.status !== "PAID") {
+          if (order) {
             const now = new Date();
-            await this.orderRepository.update(String(order._id), {
-              status: "PAID",
-              razorpayPaymentId: payment?.id || order.razorpayPaymentId,
-              paidAt: now,
-            });
+            if (order.status !== "PAID") {
+              await this.orderRepository.markPaidIfUnpaid(String(order._id), {
+                razorpayPaymentId: payment?.id || order.razorpayPaymentId,
+                paidAt: now,
+              });
+            }
 
-            if (order.workId) {
-              const work = await this.workRepository.findById(this.idOf(order.workId));
-              if (work) {
-                work.paymentStatus = "paid";
-                work.isPublished = true;
-                work.orderId = order._id as Types.ObjectId;
-                work.publishedAt = now;
-                await work.save();
-                void this.notifications.invitationPublished(String(work._id));
+            const latest = await this.orderRepository.findById(String(order._id));
+            if (latest?.status === "PAID") {
+              try {
+                await this.publishLinkedWork(latest, now);
+              } catch (error) {
+                console.error("[payment] publish after webhook failed", error);
               }
             }
           }

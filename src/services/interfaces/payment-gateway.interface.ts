@@ -18,4 +18,6 @@ export default interface IPaymentGateway {
   verifyWebhookSignature(rawBody: string | Buffer, signature: string): boolean;
   getKeyId(): string;
   isMock(): boolean;
+  /** Throws when production is missing real Razorpay credentials / webhook secret. */
+  assertProductionReady(): void;
 }

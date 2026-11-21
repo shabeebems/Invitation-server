@@ -16,6 +16,13 @@ export default class TemplateRepository implements ITemplateRepository {
       .sort({ createdAt: -1 });
   }
 
+  async findActive(): Promise<ITemplate[]> {
+    return TemplateModel.find({ isActive: true })
+      .populate("categoryId", "name")
+      .populate("selectedThemeId", "title")
+      .sort({ createdAt: -1 });
+  }
+
   async findBySlug(slug: string): Promise<ITemplate | null> {
     return TemplateModel.findOne({ slug: slug.toLowerCase() })
       .populate("categoryId", "name")

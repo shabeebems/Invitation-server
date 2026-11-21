@@ -14,9 +14,11 @@ export default class CategoryService implements ICategoryService {
     @inject(TYPES.ICategoryRepository) private readonly categoryRepository: ICategoryRepository
   ) {}
 
-  async list() {
+  async list(options?: { includeInactive?: boolean }) {
     return guard("Could not load categories", async () => {
-      const categories = await this.categoryRepository.findAll();
+      const categories = options?.includeInactive
+        ? await this.categoryRepository.findAll()
+        : await this.categoryRepository.findActive();
       return categories.map(toCategoryJson);
     });
   }

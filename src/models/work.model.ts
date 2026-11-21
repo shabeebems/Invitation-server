@@ -76,7 +76,7 @@ const workSchema = new Schema<IWork>(
     },
     isPublished: {
       type: Boolean,
-      default: true,
+      default: false,
       index: true,
     },
     paymentStatus: {

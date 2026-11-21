@@ -55,6 +55,7 @@ const RESERVED_SLUGS = new Set([
   "privacy",
   "profile",
   "published",
+  "qa-countdown",
   "refund",
   "reset-password",
   "signup",
@@ -90,7 +91,7 @@ export default class WorkService implements IWorkService {
     });
   }
 
-  async show(slug: string) {
+  async show(slug: string, actor?: WorkActor | null) {
     return guard("Could not load work", async () => {
       const normalized = slug.trim();
 
@@ -101,6 +102,16 @@ export default class WorkService implements IWorkService {
       const work = await this.workRepository.findBySlug(normalized);
 
       if (!work) {
+        throw new NotFoundError("Work not found");
+      }
+
+      // Guests only see paid/live invitations. Owners and admins may open unpaid drafts.
+      // Prefer paymentStatus — schema historically defaulted isPublished to true.
+      const isLive = work.paymentStatus === "paid";
+      const canPreviewDraft =
+        actor?.role === "admin" || (Boolean(actor?.userId) && this.idOf(work.userId) === actor?.userId);
+
+      if (!isLive && !canPreviewDraft) {
         throw new NotFoundError("Work not found");
       }
 
@@ -130,14 +141,89 @@ export default class WorkService implements IWorkService {
         throw new NotFoundError("Category not found");
       }
 
+      if (!category.isActive) {
+        throw new BadRequestError("This category is no longer available");
+      }
+
       const template = await this.templateRepository.findById(templateId);
 
       if (!template) {
         throw new NotFoundError("Template not found");
       }
 
+      if (!template.isActive) {
+        throw new BadRequestError("This template is no longer available");
+      }
+
       if (this.idOf(template.categoryId) !== categoryId) {
         throw new BadRequestError("Template does not belong to this category");
+      }
+
+      const orderId = String(fields.orderId || "").trim();
+      let paymentStatus: "unpaid" | "paid" = "unpaid";
+      let linkedOrderId: Types.ObjectId | null = null;
+      let claimedWorkId: Types.ObjectId | undefined;
+
+      if (orderId) {
+        if (!Types.ObjectId.isValid(orderId)) {
+          throw new BadRequestError("A valid payment order is required");
+        }
+
+        const order = await this.orderRepository.findById(orderId);
+
+        if (!order || this.idOf(order.userId) !== userId) {
+          throw new ForbiddenError("Not authorized to use this payment");
+        }
+
+        if (order.status !== "PAID") {
+          throw new BadRequestError("Payment is not complete");
+        }
+
+        if (this.idOf(order.templateId) !== templateId) {
+          throw new BadRequestError("Payment is for a different template");
+        }
+
+        // Idempotent retry: payment already fulfilled → return that invitation.
+        if (order.workId) {
+          const existing = await this.workRepository.findById(this.idOf(order.workId));
+          if (existing && this.idOf(existing.userId) === userId) {
+            // Heal if mark-paid succeeded earlier but work publish did not.
+            if (existing.paymentStatus !== "paid") {
+              existing.paymentStatus = "paid";
+              existing.isPublished = true;
+              existing.orderId = order._id as Types.ObjectId;
+              existing.publishedAt = existing.publishedAt || new Date();
+              await existing.save();
+              void this.notifications.invitationPublished(String(existing._id));
+            }
+            const [json] = await this.withThemes([existing]);
+            return json;
+          }
+          throw new BadRequestError("This payment is already linked to an invitation");
+        }
+
+        claimedWorkId = new Types.ObjectId();
+        const claimed = await this.orderRepository.claimUnlinkedPaidOrder({
+          orderId,
+          userId,
+          templateId,
+          workId: claimedWorkId,
+        });
+
+        if (!claimed) {
+          const latest = await this.orderRepository.findById(orderId);
+          if (latest?.workId) {
+            const existing = await this.workRepository.findById(this.idOf(latest.workId));
+            if (existing && this.idOf(existing.userId) === userId) {
+              const [json] = await this.withThemes([existing]);
+              return json;
+            }
+          }
+          throw new BadRequestError("This payment could not be claimed for a new invitation");
+        }
+
+        paymentStatus = "paid";
+        linkedOrderId = order._id as Types.ObjectId;
       }
 
       const snapshot = await this.snapshotFromTemplate(template);
@@ -163,38 +249,32 @@ export default class WorkService implements IWorkService {
         );
       }
 
-      const orderId = String(fields.orderId || "").trim();
-      let paymentStatus: "unpaid" | "paid" = "unpaid";
-      let linkedOrderId: Types.ObjectId | null = null;
-
-      if (orderId && Types.ObjectId.isValid(orderId)) {
-        const order = await this.orderRepository.findById(orderId);
-        if (order && this.idOf(order.userId) === userId && order.status === "PAID") {
-          paymentStatus = "paid";
-          linkedOrderId = order._id as Types.ObjectId;
+      let work;
+      try {
+        work = await this.workRepository.create({
+          ...(claimedWorkId ? { _id: claimedWorkId } : {}),
+          slug,
+          name,
+          description: template.description,
+          userId,
+          categoryId,
+          templateId,
+          selectedThemeId,
+          paymentStatus,
+          orderId: linkedOrderId,
+          isPublished: paymentStatus === "paid",
+          publishedAt: paymentStatus === "paid" ? new Date() : null,
+          images: snapshot.images,
+          content: compactTemplateContent(mergedContent, family) as ITemplateContent,
+        });
+      } catch (error) {
+        if (linkedOrderId && claimedWorkId) {
+          await this.orderRepository.releaseWorkClaim(String(linkedOrderId), claimedWorkId);
         }
+        throw error;
       }
 
-      const work = await this.workRepository.create({
-        slug,
-        name,
-        description: template.description,
-        userId,
-        categoryId,
-        templateId,
-        selectedThemeId,
-        paymentStatus,
-        orderId: linkedOrderId,
-        isPublished: paymentStatus === "paid",
-        publishedAt: paymentStatus === "paid" ? new Date() : null,
-        images: snapshot.images,
-        content: compactTemplateContent(mergedContent, family) as ITemplateContent,
-      });
-
       if (linkedOrderId) {
-        await this.orderRepository.update(String(linkedOrderId), {
-          workId: work._id as Types.ObjectId,
-        });
         void this.notifications.invitationPublished(String(work._id));
       }
 

@@ -3,6 +3,8 @@ import { IWork } from "../../models/work.model";
 import { ITemplateContent, ITemplateImage } from "../../models/template.model";
 
 export type WorkInput = {
+  /** Pre-allocated id used when atomically claiming a paid order first. */
+  _id?: Types.ObjectId;
   slug: string;
   name: string;
   description?: string;

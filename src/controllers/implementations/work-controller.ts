@@ -20,7 +20,8 @@ export default class WorkController implements IWorkController {
   }
 
   async show(req: Request, res: Response): Promise<void> {
-    const json = await this.workService.show(String(req.params.slug || ""));
+    const auth = res.locals.auth as AuthLocals | undefined;
+    const json = await this.workService.show(String(req.params.slug || ""), auth || null);
 
     res.status(200).json({
       success: true,
