@@ -8,6 +8,16 @@ import { allowedClientOrigins } from "./common/http/client-origins";
 const app = express();
 const allowedOrigins = allowedClientOrigins();
 
+// So req.ip reflects the real client behind nginx / a load balancer (rate limits, logs).
+const trustProxyRaw = process.env.TRUST_PROXY?.trim();
+if (trustProxyRaw === "0" || trustProxyRaw?.toLowerCase() === "false") {
+  app.set("trust proxy", false);
+} else if (trustProxyRaw && /^\d+$/.test(trustProxyRaw)) {
+  app.set("trust proxy", Number(trustProxyRaw));
+} else {
+  app.set("trust proxy", process.env.NODE_ENV === "production" ? 1 : false);
+}
+
 app.use(
   helmet({
     contentSecurityPolicy: false,

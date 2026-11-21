@@ -32,14 +32,19 @@ export function toWorkJson(work: IWork, themes: ITheme[] = []) {
   const template = templateFrom(work);
   const selectedTheme = selectedThemeFrom(work);
 
+  const paymentStatus = work.paymentStatus === "paid" ? "paid" : "unpaid";
+  const isLive = paymentStatus === "paid";
+
   return {
     id: String(work._id),
     slug: work.slug,
     name: work.name,
     description: work.description,
     isActive: work.isActive,
-    isPublished: Boolean(work.isPublished),
-    publishedAt: work.publishedAt || null,
+    paymentStatus,
+    // Always derive from payment — never trust a stale isPublished default.
+    isPublished: isLive,
+    publishedAt: isLive ? work.publishedAt || null : null,
     source: "work" as const,
     userId:
       work.userId && typeof work.userId === "object" && "_id" in work.userId

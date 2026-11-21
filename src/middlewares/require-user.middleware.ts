@@ -11,6 +11,7 @@ export type AuthLocals = {
   sessionId?: string;
   role: "customer" | "admin";
   email?: string;
+  emailVerified: boolean;
 };
 
 const requireUser: RequestHandler = async (req, res, next) => {
@@ -36,6 +37,7 @@ const requireUser: RequestHandler = async (req, res, next) => {
       sessionId: payload.sessionId,
       role,
       email: user.email,
+      emailVerified: Boolean(user.emailVerified),
     } satisfies AuthLocals;
     next();
   } catch (error) {

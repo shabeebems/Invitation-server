@@ -16,6 +16,10 @@ export default class RazorpayGateway implements IPaymentGateway {
   private client: Razorpay | null = null;
   private clientKeyId = "";
 
+  private isProduction() {
+    return process.env.NODE_ENV === "production";
+  }
+
   private config() {
     const keyId = (process.env.RAZORPAY_KEY_ID || "").trim();
     const keySecret = (process.env.RAZORPAY_KEY_SECRET || "").trim();
@@ -30,8 +34,36 @@ export default class RazorpayGateway implements IPaymentGateway {
       keyId: keyId || PLACEHOLDER_KEY_ID,
       keySecret: keySecret || PLACEHOLDER_KEY_SECRET,
       webhookSecret: webhookSecret || PLACEHOLDER_WEBHOOK_SECRET,
+      webhookSecretConfigured: Boolean(webhookSecret) && webhookSecret !== PLACEHOLDER_WEBHOOK_SECRET,
       isMockMode,
     };
+  }
+
+  /** Call at process boot — refuses to run production with mock/placeholder Razorpay config. */
+  assertProductionReady() {
+    if (!this.isProduction()) {
+      return;
+    }
+
+    const { isMockMode, webhookSecretConfigured } = this.config();
+
+    if (isMockMode) {
+      throw new Error(
+        "Razorpay is in mock mode. Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET before running in production."
+      );
+    }
+
+    if (!webhookSecretConfigured) {
+      throw new Error(
+        "RAZORPAY_WEBHOOK_SECRET is missing or still a placeholder. Set a real webhook secret in production."
+      );
+    }
+  }
+
+  private rejectMockInProduction() {
+    if (this.isProduction() && this.isMock()) {
+      throw new Error("Razorpay mock mode is not allowed in production");
+    }
   }
 
   private sdk() {
@@ -63,6 +95,7 @@ export default class RazorpayGateway implements IPaymentGateway {
   }
 
   async createOrder(input: CreateGatewayOrderInput): Promise<GatewayOrderResult> {
+    this.rejectMockInProduction();
     const client = this.sdk();
 
     if (!client) {
@@ -91,6 +124,7 @@ export default class RazorpayGateway implements IPaymentGateway {
   }
 
   verifyPaymentSignature(orderId: string, paymentId: string, signature: string): boolean {
+    this.rejectMockInProduction();
     const { keySecret, isMockMode } = this.config();
 
     if (isMockMode) {
@@ -121,7 +155,12 @@ export default class RazorpayGateway implements IPaymentGateway {
   }
 
   verifyWebhookSignature(rawBody: string | Buffer, signature: string): boolean {
-    const { webhookSecret, isMockMode } = this.config();
+    this.rejectMockInProduction();
+    const { webhookSecret, webhookSecretConfigured, isMockMode } = this.config();
+
+    if (this.isProduction() && !webhookSecretConfigured) {
+      return false;
+    }
 
     if (isMockMode && signature === "mock_webhook_signature") {
       return true;

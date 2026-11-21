@@ -11,7 +11,7 @@ export type CategoryWriteInput = {
 };
 
 export default interface ICategoryService {
-  list(): Promise<CategoryJson[]>;
+  list(options?: { includeInactive?: boolean }): Promise<CategoryJson[]>;
   create(input: CategoryWriteInput): Promise<CategoryJson>;
   update(id: string, input: CategoryWriteInput): Promise<CategoryJson>;
 }

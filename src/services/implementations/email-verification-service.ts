@@ -1,6 +1,7 @@
 import { randomBytes } from "crypto";
 import { inject, injectable } from "inversify";
 import { BadRequestError } from "../../common/errors";
+import { primaryClientOrigin } from "../../common/http/client-origins";
 import TYPES from "../../constants/types";
 import { IUser } from "../../models/user.model";
 import IUserRepository from "../../repositories/interfaces/user-repository.interface";
@@ -25,7 +26,7 @@ export default class EmailVerificationService implements IEmailVerificationServi
   async issue(user: IUser, _meta: RequestMeta): Promise<void> {
     const raw = randomBytes(32).toString("hex");
     await this.users.setVerifyToken(String(user._id), this.tokens.hash(raw), new Date(Date.now() + TTL_MS));
-    const origin = process.env.CLIENT_ORIGIN || "http://localhost:3000";
+    const origin = primaryClientOrigin();
     await this.email.send({
       to: user.email,
       ...verificationEmail({ name: user.name, verifyUrl: `${origin}/verify-email?token=${raw}` }),

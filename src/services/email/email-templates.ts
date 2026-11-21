@@ -24,7 +24,12 @@ const SANS = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial
 const SERIF = "Georgia,'Times New Roman',Times,serif";
 
 function origin() {
-  return (process.env.CLIENT_ORIGIN || "http://localhost:3000").replace(/\/+$/, "");
+  const raw =
+    process.env.CLIENT_ORIGINS ||
+    process.env.CLIENT_ORIGIN ||
+    "http://localhost:3000";
+  const first = raw.split(",")[0]?.trim() || "http://localhost:3000";
+  return first.replace(/\/+$/, "");
 }
 
 export function supportEmail() {

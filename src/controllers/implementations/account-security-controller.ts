@@ -7,7 +7,8 @@ import { AuthLocals } from "../../middlewares/require-user.middleware";
 import IEmailVerificationService from "../../services/interfaces/email-verification-service.interface";
 import IPasswordResetService from "../../services/interfaces/password-reset-service.interface";
 
-const RESET_MESSAGE = "We sent a reset link to this email. It expires in 1 hour.";
+const RESET_MESSAGE =
+  "If an account exists for that email, we sent a reset link. It expires in 1 hour.";
 const VERIFY_MESSAGE = "If the account needs verification, a new email is on the way.";
 
 @injectable()

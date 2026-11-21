@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { inject, injectable } from "inversify";
 import TYPES from "../../constants/types";
+import { AuthLocals } from "../../middlewares/require-user.middleware";
 import type ICategoryService from "../../services/interfaces/category-service.interface";
 import ICategoryController from "../interfaces/category-controller.interface";
 
@@ -11,7 +12,10 @@ export default class CategoryController implements ICategoryController {
   ) {}
 
   async list(_req: Request, res: Response): Promise<void> {
-    const categories = await this.categoryService.list();
+    const auth = res.locals.auth as AuthLocals | undefined;
+    const categories = await this.categoryService.list({
+      includeInactive: auth?.role === "admin",
+    });
 
     res.status(200).json({
       success: true,

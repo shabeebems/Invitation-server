@@ -1,6 +1,7 @@
 import { randomBytes } from "crypto";
 import { inject, injectable } from "inversify";
-import { BadRequestError, NotFoundError, UnauthorizedError } from "../../common/errors";
+import { BadRequestError, UnauthorizedError } from "../../common/errors";
+import { primaryClientOrigin } from "../../common/http/client-origins";
 import TYPES from "../../constants/types";
 import IRefreshTokenRepository from "../../repositories/interfaces/refresh-token-repository.interface";
 import IUserRepository from "../../repositories/interfaces/user-repository.interface";
@@ -26,23 +27,27 @@ export default class PasswordResetService implements IPasswordResetService {
   ) {}
 
   async request(email: string, _meta: RequestMeta): Promise<void> {
+    // Always succeed to the client — never reveal whether the email is registered
+    // or whether the account uses Google vs password.
     const user = await this.users.findByEmail(String(email || "").trim().toLowerCase());
 
-    if (!user) {
-      throw new NotFoundError("No account found for this email.");
-    }
-
-    if (!user.passwordHash) {
-      throw new BadRequestError("This email signs in with Google. Continue with Google, or add a password from your profile.");
+    if (!user || !user.passwordHash) {
+      return;
     }
 
     const raw = randomBytes(32).toString("hex");
     await this.users.setResetToken(String(user._id), this.tokens.hash(raw), new Date(Date.now() + TTL_MS));
-    const origin = process.env.CLIENT_ORIGIN || "http://localhost:3000";
-    await this.email.send({
-      to: user.email,
-      ...passwordResetEmail({ name: user.name, resetUrl: `${origin}/reset-password?token=${raw}` }),
-    });
+    const origin = primaryClientOrigin();
+
+    try {
+      await this.email.send({
+        to: user.email,
+        ...passwordResetEmail({ name: user.name, resetUrl: `${origin}/reset-password?token=${raw}` }),
+      });
+    } catch (error) {
+      // Keep the same client response as "no account" — do not leak existence via 500s.
+      console.error("[password-reset] email send failed", error);
+    }
   }
 
   async reset(token: string, password: string, meta: RequestMeta): Promise<void> {

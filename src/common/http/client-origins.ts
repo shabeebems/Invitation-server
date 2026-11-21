@@ -9,3 +9,8 @@ export function allowedClientOrigins(): string[] {
     .map((origin) => origin.trim())
     .filter(Boolean);
 }
+
+/** First allowed origin — used for email links when CLIENT_ORIGIN is unset. */
+export function primaryClientOrigin(): string {
+  return (allowedClientOrigins()[0] || "http://localhost:3000").replace(/\/+$/, "");
+}

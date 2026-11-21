@@ -10,6 +10,7 @@ export type CategoryInput = {
 
 export default interface ICategoryRepository {
   findAll(): Promise<ICategory[]>;
+  findActive(): Promise<ICategory[]>;
   findByName(name: string): Promise<ICategory | null>;
   findWedding(): Promise<ICategory | null>;
   findHouseWarming(): Promise<ICategory | null>;

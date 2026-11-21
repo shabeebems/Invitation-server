@@ -11,6 +11,10 @@ export default class CategoryRepository implements ICategoryRepository {
     return CategoryModel.find().sort({ createdAt: -1 });
   }
 
+  async findActive(): Promise<ICategory[]> {
+    return CategoryModel.find({ isActive: true }).sort({ createdAt: -1 });
+  }
+
   async findByName(name: string): Promise<ICategory | null> {
     return CategoryModel.findOne({
       name: { $regex: new RegExp(`^${name}$`, "i") },

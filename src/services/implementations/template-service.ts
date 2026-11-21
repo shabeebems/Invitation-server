@@ -38,13 +38,16 @@ export default class TemplateService implements ITemplateService {
     @inject(TYPES.IThemeRepository) private readonly themeRepository: IThemeRepository
   ) {}
 
-  async list() {
+  async list(options?: { includeInactive?: boolean }) {
     return guard("Could not load templates", async () => {
-      return this.withThemes(await this.templateRepository.findAll());
+      const templates = options?.includeInactive
+        ? await this.templateRepository.findAll()
+        : await this.templateRepository.findActive();
+      return this.withThemes(templates);
     });
   }
 
-  async show(slug: string) {
+  async show(slug: string, options?: { includeInactive?: boolean }) {
     return guard("Could not load template", async () => {
       const normalized = slug.trim();
 
@@ -54,7 +57,7 @@ export default class TemplateService implements ITemplateService {
 
       const template = await this.templateRepository.findBySlug(normalized);
 
-      if (!template) {
+      if (!template || (!options?.includeInactive && !template.isActive)) {
         throw new NotFoundError("Template not found");
       }
 

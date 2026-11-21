@@ -48,6 +48,7 @@ authRouter.post(
 authRouter.post(
   "/change-password",
   requireUser,
+  rateLimit("change-password", 10, hour),
   asyncHandler((req, res) => security.changePassword(req, res))
 );
 authRouter.get("/sessions", requireUser, asyncHandler((req, res) => sessions.list(req, res)));
