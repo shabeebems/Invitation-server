@@ -24,8 +24,7 @@
     "cleanup:royal-themes": "tsx src/scripts/cleanup-royal-themes.ts",
     "cleanup:royal-content": "tsx src/scripts/cleanup-royal-content.ts",
     "cleanup:royal": "tsx src/scripts/cleanup-royal-themes.ts && tsx src/scripts/cleanup-royal-content.ts",
-    "cleanup:maps-legacy": "tsx src/scripts/cleanup-maps-legacy.ts",
-    "cleanup:rebrand": "tsx src/scripts/rebrand-content.ts"
+    "cleanup:maps-legacy": "tsx src/scripts/cleanup-maps-legacy.ts"
   },
   "keywords": [],
   "author": "",
