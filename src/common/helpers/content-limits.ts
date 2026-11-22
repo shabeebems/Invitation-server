@@ -75,7 +75,7 @@ export const CONTENT_FIELD_MAX: Partial<Record<TemplateContentTextKey, number>> 
   addressFull: 200,
   addressShort: 80,
   googleMapsUrl: 500,
-  copyAddressLabel: 40,
+  copyAddressLabel: 80,
   hamdalah: 80,
   closingBlessing: 400,
   closingPresence: 120,

@@ -12,52 +12,48 @@ runImport("Botanical Script", async () => {
   const existing = await templateRepository.findBySlug("botanical-script");
   const existingStory = existing?.content?.loveStoryItems || [];
   const existingGallery = existing?.content?.galleryItems || [];
-  const existingProgram = existing?.content?.programItems || [];
 
   const programMeta = [
     {
       title: "Mehendi",
-      time: "21 Nov 2025, Friday • 4:00 PM",
+      time: "20 Nov 2027, Friday • 4:00 PM",
       description: "The Royal Garden, Udayapuram",
     },
     {
       title: "Sangeet",
-      time: "21 Nov 2025, Friday • 7:00 PM",
+      time: "20 Nov 2027, Friday • 7:00 PM",
       description: "The Royal Garden, Udayapuram",
     },
     {
       title: "Wedding Ceremony",
-      time: "22 Nov 2025, Saturday • 10:00 AM",
+      time: "21 Nov 2027, Saturday • 10:00 AM",
       description: "The Royal Garden, Udayapuram",
     },
   ] as const;
 
-  const programItems = programMeta.map((item, index) => {
-    const prev = existingProgram[index];
-    return {
-      title: prev?.title || item.title,
-      time: prev?.time || item.time,
-      description: prev?.description || item.description,
-    };
-  });
+  const programItems = programMeta.map((item) => ({
+    title: item.title,
+    time: item.time,
+    description: item.description,
+  }));
 
   const itineraryMeta = [
     {
       icon: "arrival",
       title: "Arrival",
-      date: "21 Nov, 2025 • 2:00 PM",
+      date: "20 Nov, 2027 • 2:00 PM",
       place: "welcoming celebrations",
     },
     {
       icon: "celebration",
       title: "Celebration",
-      date: "21–22 Nov, 2025 • 7:00 PM",
+      date: "20–21 Nov, 2027 • 7:00 PM",
       place: "Let's celebrate together!",
     },
     {
       icon: "farewell",
       title: "Farewell",
-      date: "23 Nov, 2025 • 10:00 AM",
+      date: "22 Nov, 2027 • 10:00 AM",
       place: "Until we meet again!",
     },
   ] as const;
@@ -66,9 +62,9 @@ runImport("Botanical Script", async () => {
     const prev = existingStory[index];
     return {
       icon: item.icon,
-      title: prev?.title || item.title,
-      date: prev?.date || item.date,
-      place: prev?.place || item.place,
+      title: item.title,
+      date: item.date,
+      place: item.place,
       url: prev?.url || "",
       publicId: prev?.publicId || "",
     };
@@ -104,7 +100,7 @@ runImport("Botanical Script", async () => {
     isActive: true,
     content: {
       hashtag: "AD",
-      hostLabel: "22 NOVEMBER 2025 • UDAYAPURAM, KERALA",
+      hostLabel: "21 NOVEMBER 2027 • UDAYAPURAM, KERALA",
       groomName: "Aarav",
       brideName: "Diya",
       groomLabel: "The Groom",
@@ -112,8 +108,8 @@ runImport("Botanical Script", async () => {
       introLine: "Together is our favourite place to be.\nJoin us as we begin our forever.",
       inviteLine: "Wedding",
       weekday: "Saturday",
-      day: "22",
-      monthYear: "November 2025",
+      day: "21",
+      monthYear: "November 2027",
       time: "At 10:00 AM",
       venueLabel: "Dress Code",
       venueName: "The Royal Garden",
@@ -131,21 +127,21 @@ runImport("Botanical Script", async () => {
       meetCoupleTitle: "A Little About Us",
       storyTitle: "Two Hearts, One Journey",
       storyText:
-        "From countless conversations to a lifetime of dreams, Aarav and Diya found in each other a love that feels like home.",
+        "From late-night calls across cities to a lifetime of dreams, Aarav and Diya found in each other a love that feels like home.",
       meetCoupleIntro:
-        "Through every laugh, every challenge and every little moment, we chose each other — and now, we choose forever.",
-      presenceLine: "Our story continues...",
+        "Through every laugh, every challenge and every quiet Sunday, we chose each other — and now, we choose forever in Udayapuram.",
+      presenceLine: "Our story continues…",
       storyLayout: "arch-narrative",
       meetCoupleLayout: "party-row",
       brideParentsLabel: "Our Family & Wedding Party",
-      amenityOneLabel: "Our Parents",
-      amenityOneDetail: "Who made this day possible",
-      amenityTwoLabel: "Our Parents",
-      amenityTwoDetail: "Our biggest supporters",
+      amenityOneLabel: "Parents of the groom",
+      amenityOneDetail: "Mr. & Mrs. Sharma — who made this day possible",
+      amenityTwoLabel: "Parents of the bride",
+      amenityTwoDetail: "Mr. & Mrs. Iyer — our strongest blessing",
       amenityThreeLabel: "With love",
-      amenityThreeDetail: "With love, we are better together",
+      amenityThreeDetail: "Siblings, cousins and dearest friends beside us",
       programEyebrow: "Wedding Events",
-      programIntro: "Three beautiful moments, one big celebration",
+      programIntro: "Mehendi, sangeet and the wedding — three days of celebration",
       programLayout: "trio-cards",
       programItems,
       blessing:
@@ -162,7 +158,7 @@ runImport("Botanical Script", async () => {
       loveStoryItems,
       heroLayout: "split-cta",
       ambianceEffect: "leaves",
-      eventDateIso: "2025-11-22T10:00:00+05:30",
+      eventDateIso: "2027-11-21T10:00:00+05:30",
       enabledSections: [
         "hero",
         "story",
@@ -179,7 +175,7 @@ runImport("Botanical Script", async () => {
       footerLayout: "grove",
       craftedBy: "#AaravWedDiya • #BotanicalScript",
       shareText:
-        "You're invited to the wedding of Aarav & Diya\nSaturday, 22 November 2025 · 10:00 AM\nThe Royal Garden, Udayapuram\n\n#AaravWedDiya",
+        "You're invited to the wedding of Aarav & Diya\nSaturday, 21 November 2027 · 10:00 AM\nThe Royal Garden, Udayapuram\n\n#AaravWedDiya",
     },
   });
 

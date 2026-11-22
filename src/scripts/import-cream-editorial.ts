@@ -150,11 +150,11 @@ runImport("Cream Editorial", async () => {
       day: "12",
       monthYear: "June 2027",
       time: "At 4:00 PM",
-      venueName: "Villa Placeholder",
-      venueCity: "Demo Gardens, Example Lake, Italy",
-      addressFull: "1 Sample Lane (demo address)",
-      mapsUrl: "https://www.google.com/maps/search/?api=1&query=Lake+Como+Italy",
-      googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Lake+Como+Italy",
+      venueName: "Villa Cipressi",
+      venueCity: "Bellagio, Lake Como, Italy",
+      addressFull: "Via Roma 12, Bellagio, Lake Como",
+      mapsUrl: "https://www.google.com/maps/search/?api=1&query=Villa+Cipressi+Bellagio",
+      googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Villa+Cipressi+Bellagio",
       getDirectionsLabel: "Get directions",
       locationTitle: "The venue",
       locationLayout: "split-venue",
@@ -174,9 +174,9 @@ runImport("Cream Editorial", async () => {
       brideLabel: "The bride",
       groomLabel: "The groom",
       brideBio:
-        "Architect, bread-baker, collector of pressed flowers. She says yes to every detour.",
+        "An architect from Lisbon who bakes sourdough on Sundays and presses wildflowers into every sketchbook.",
       groomBio:
-        "Cellist and terrible map-reader. He hums while he cooks and cries at weddings.",
+        "A cellist from Vienna who hums while he cooks, gets lost on purpose, and cries at every wedding — including his own.",
       loveStoryTitle: "Our love story",
       envelopeTagline: "How we got here",
       loveStoryLayout: "year-rail",
@@ -208,21 +208,21 @@ runImport("Cream Editorial", async () => {
       locationEyebrow: "Travel & stay",
       amenityOneLabel: "Stay",
       amenityOneDetail:
-        "A block of demo rooms is held at Hotel Example. Mention the wedding when booking.",
+        "A block of rooms is held at Hotel Belvedere. Mention the wedding when booking.",
       amenityTwoLabel: "Shuttles",
       amenityTwoDetail:
         "Complimentary shuttles leave the hotel at 3:00 PM and return at midnight.",
       destinationLabel: "Parking",
       addressShort: "Limited on-site parking. Carpooling is encouraged.",
       amenityThreeDetail: "Airport",
-      copyAddressLabel: "Nearest airport is about 90 minutes by road (demo).",
+      copyAddressLabel: "Milan Malpensa is about ninety minutes by road.",
       viewPhotoLabel: "accordion",
       closingBlessing: "Thank you for being part of us",
       closingPresence:
         "However you celebrate with us, near or far, we’re grateful for you.",
       replayLabel: "Back to top",
       footerLayout: "sage-close",
-      footer: "Isabel & Julian · Demo Gardens, Italy",
+      footer: "Isabel & Julian · Lake Como, Italy",
       craftedBy: "minimal",
       heroLayout: "twin-arch",
       ambianceEffect: "none",
@@ -241,7 +241,7 @@ runImport("Cream Editorial", async () => {
         "footer",
       ],
       shareText:
-        "You’re invited to the wedding of Isabel & Julian\nSaturday, 12 June 2027 · 4:00 PM\nVilla Placeholder, Demo Gardens, Italy\n\n#IsabelAndJulian",
+        "You’re invited to the wedding of Isabel & Julian\nSaturday, 12 June 2027 · 4:00 PM\nVilla Cipressi, Lake Como, Italy\n\n#IsabelAndJulian",
     },
   });
 
