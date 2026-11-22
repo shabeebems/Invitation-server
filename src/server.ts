@@ -2,7 +2,7 @@ import "reflect-metadata";
 import "./config/load-env";
 import app from "./app";
 import { assertProductionConfig } from "./config/assert-production-config";
-import { connectDB } from "./config/db";
+import { connectDB, startDbReconnectLoop } from "./config/db";
 import container from "./config/inversify.config";
 import TYPES from "./constants/types";
 import type IPaymentGateway from "./services/interfaces/payment-gateway.interface";
@@ -21,11 +21,15 @@ async function start(): Promise<void> {
   try {
     await connectDB();
   } catch (error) {
-    console.warn("MongoDB not connected.");
+    console.warn(
+      "MongoDB not connected:",
+      error instanceof Error ? error.message : error
+    );
     if (process.env.NODE_ENV === "production") {
       console.error("MongoDB is required in production.");
       process.exit(1);
     }
+    startDbReconnectLoop();
   }
 
   app.listen(PORT, () => {

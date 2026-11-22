@@ -26,8 +26,8 @@ runImport("Royal Ruby", async () => {
     const prev = existingGallery[index];
     return {
       eyebrow: prev?.eyebrow || "",
-      title: prev?.title || item.title,
-      caption: prev?.caption || item.caption,
+      title: item.title,
+      caption: item.caption,
       url: prev?.url || "",
       publicId: prev?.publicId || "",
     };
@@ -54,9 +54,11 @@ runImport("Royal Ruby", async () => {
   const programItems = programMeta.map((item, index) => {
     const prev = existingProgram[index];
     return {
-      time: prev?.time || item.time,
-      title: prev?.title || item.title,
-      description: prev?.description || item.description,
+      time: item.time,
+      title: item.title,
+      description: item.description,
+      url: prev?.url || "",
+      publicId: prev?.publicId || "",
     };
   });
 
@@ -91,31 +93,31 @@ runImport("Royal Ruby", async () => {
       locationLayout: "centered-venue",
       galleryTitle: "Our Gallery",
       galleryIntro: "Little moments of love, laughter and blessings we will cherish forever.",
-      galleryCtaLabel: "View full gallery",
+      galleryCtaLabel: "See every frame",
       galleryLayout: "arch-gallery",
       galleryItems,
       storyTitle: "Our Story",
       storyText:
-        "What began as a chance meeting turned into a lifetime of laughter, long talks and quiet promises. Through every season, we found home in each other — and now, surrounded by the people we love most, we are ready to begin our forever.",
+        "What began as a chance meeting in Thrissur turned into years of laughter, long talks and quiet promises. Through every season we found home in each other — and now, surrounded by the people we love most, we begin our forever.",
       presenceLine: "Ananya & Arjun",
       storyLayout: "arch-story",
       meetCoupleTitle: "With blessings of",
       meetCoupleIntro:
-        "Together with the blessings of our parents and elders, we joyfully invite you to share in our celebration of love.",
+        "With the blessings of our parents and elders, we joyfully invite you to celebrate our wedding.",
       meetCoupleLayout: "dual-folio",
       brideParentsLabel: "Parents of the bride",
       brideParents: "Mr. & Mrs. Menon",
-      brideDetail: "Add the family names here",
+      brideDetail: "Thrissur · Grandparents, aunts, uncles & cousins",
       groomLabel: "Parents of the groom",
       hostNames: "Mr. & Mrs. Nair",
-      groomDetail: "Add the family names here",
+      groomDetail: "Ernakulam · Grandparents, aunts, uncles & cousins",
       countdownHeading: "Until we say I do",
-      countdownSubtitle: "Our special day is coming",
+      countdownSubtitle: "Fourteen February, twenty twenty-seven",
       countdownLiveLabel: "We're married!",
       countdownLayout: "gold-rings",
       eventDateIso: "2027-02-14T10:30:00+05:30",
       programTitle: "The celebrations",
-      programIntro: "Tap a card to see the details.",
+      programIntro: "Mehendi, muhurtham and reception — one joyful weekend in Thrissur.",
       programLayout: "flip-cards",
       programItems,
       heroLayout: "mandala-foil",

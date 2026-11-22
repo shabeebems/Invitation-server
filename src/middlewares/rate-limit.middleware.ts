@@ -1,5 +1,5 @@
 import { Request, RequestHandler, Response } from "express";
-import mongoose from "mongoose";
+import { isDbReady } from "../config/db";
 import type { AuthLocals } from "./require-user.middleware";
 import { RateLimitModel } from "../models/rate-limit.model";
 
@@ -85,7 +85,7 @@ async function takeShared(key: string, limit: number, windowMs: number): Promise
 }
 
 function useSharedStore(): boolean {
-  return mongoose.connection.readyState === 1;
+  return isDbReady();
 }
 
 /**

@@ -150,7 +150,7 @@ runImport("Aurelia Nocturne", async () => {
       storyText:
         "Formal evening attire. Soft midnight, ivory and muted rose tones are most welcome.",
       storyLayout: "ringed-swatches",
-      dressPaletteLabel: "Choose your colour",
+      dressPaletteLabel: "A gentle palette",
       closingBlessing: "And so,\nour next chapter begins.",
       closingPresence: "Thank you for being part of our story.",
       replayLabel: "Return to the beginning",

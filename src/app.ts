@@ -3,6 +3,8 @@ import cors from "cors";
 import helmet from "helmet";
 import routes from "./routes";
 import errorHandler from "./middlewares/error.middleware";
+import requireDb from "./middlewares/require-db.middleware";
+import { isDbReady } from "./config/db";
 import { allowedClientOrigins } from "./common/http/client-origins";
 
 const app = express();
@@ -46,10 +48,10 @@ app.use(
 );
 
 app.get("/health", (_req, res) => {
-  res.json({ status: "ok" });
+  res.json({ status: "ok", db: isDbReady() ? "up" : "down" });
 });
 
-app.use("/api", routes);
+app.use("/api", requireDb, routes);
 app.use(errorHandler);
 
 export default app;
